@@ -4,7 +4,6 @@ import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Stepper } from '../components/wizard/Stepper'
 import { SectionForm } from '../components/wizard/SectionForm'
 import { RepeatableSection } from '../components/wizard/RepeatableSection'
-import { Switch } from '../components/wizard/Switch'
 import { PhotoUpload } from '../components/wizard/PhotoUpload'
 import { MedicationCard } from '../components/wizard/MedicationCard'
 import { AllergyCard } from '../components/wizard/AllergyCard'
@@ -13,6 +12,7 @@ import { WomenHealthSection } from '../components/wizard/WomenHealthSection'
 import { MenHealthSection } from '../components/wizard/MenHealthSection'
 import { DiseaseCardGrid } from '../components/wizard/DiseaseCardGrid'
 import { ExpandableFamilyCard } from '../components/wizard/ExpandableFamilyCard'
+import { ReviewSubmitPage } from '../components/wizard/ReviewSubmitPage'
 import { HealthTips } from '../components/wizard/HealthTips'
 import type { WizardState, SectionKey } from '../types/wizard'
 import { createDefaultState } from '../state/defaults'
@@ -61,66 +61,14 @@ function renderSection(
 
   if (key === 'consents') {
     return (
-      <div className="space-y-6">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Review &amp; Consent</h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Profile Summary</h3>
-          <div className="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-            <div><span className="font-medium">Name:</span> {state.personal.first_name} {state.personal.last_name}</div>
-            <div><span className="font-medium">DOB:</span> {state.personal.date_of_birth || '—'}</div>
-            <div><span className="font-medium">Gender:</span> {state.personal.gender || '—'}</div>
-            <div><span className="font-medium">Blood Group:</span> {state.personal.blood_group || '—'}</div>
-            <div><span className="font-medium">Country:</span> {state.personal.country || '—'}</div>
-            <div><span className="font-medium">City:</span> {state.personal.city || '—'}</div>
-          </div>
-          {state.body.height_cm || state.body.weight_kg ? (
-            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-              <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Body Metrics</h4>
-              <div className="mt-2 grid grid-cols-1 gap-3 text-sm text-slate-600 dark:text-slate-300 sm:grid-cols-2">
-                {state.body.height_cm ? <div><span className="font-medium">Height:</span> {state.body.height_cm} cm</div> : null}
-                {state.body.weight_kg ? <div><span className="font-medium">Weight:</span> {state.body.weight_kg} kg</div> : null}
-                {state.body.waist_cm ? <div><span className="font-medium">Waist:</span> {state.body.waist_cm} cm</div> : null}
-                {state.body.hip_cm ? <div><span className="font-medium">Hip:</span> {state.body.hip_cm} cm</div> : null}
-              </div>
-            </div>
-          ) : null}
-        </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Accept Terms &amp; Conditions</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">You must accept to submit your profile</p>
-            </div>
-            <Switch
-              checked={state.consents.terms_accepted}
-              onChange={(v) => setSection('consents', { ...state.consents, terms_accepted: v })}
-              label="Accept Terms"
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">AI-Assisted Health Analysis</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Allow AI to analyze your profile data</p>
-            </div>
-            <Switch
-              checked={state.consents.ai_consent}
-              onChange={(v) => setSection('consents', { ...state.consents, ai_consent: v })}
-              label="AI Analysis"
-            />
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-            <div>
-              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Anonymized Research Consent</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Allow your data to be used for research</p>
-            </div>
-            <Switch
-              checked={state.consents.research_consent}
-              onChange={(v) => setSection('consents', { ...state.consents, research_consent: v })}
-              label="Research Consent"
-            />
-          </div>
-        </div>
-      </div>
+      <ReviewSubmitPage
+        state={state}
+        setSection={setSection}
+        onSubmit={() => {
+          console.log('Profile submitted:', state)
+          alert('Profile submitted successfully!')
+        }}
+      />
     )
   }
 
@@ -495,6 +443,7 @@ export default function HealthProfilePage() {
           {renderSection(steps[currentStep], state, setSection)}
         </div>
 
+        {currentKey !== 'consents' && (
         <div className="mt-6 flex items-center justify-between">
           <button
             type="button"
@@ -531,6 +480,7 @@ export default function HealthProfilePage() {
             )}
           </div>
         </div>
+      )}
       </div>
     </DashboardLayout>
   )
