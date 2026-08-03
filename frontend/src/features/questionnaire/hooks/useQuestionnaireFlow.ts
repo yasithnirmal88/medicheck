@@ -11,6 +11,21 @@ import type { AnswerResponse, AssessmentSession, Question } from '../types'
 
 const DRAFT_STORAGE_KEY = (sessionId: string) => `medicheck:questionnaire:draft:${sessionId}`
 
+const bodySystemLookup: Record<string, string> = {
+  cardiovascular: 'Cardiovascular',
+  neurological: 'Neurological',
+  respiratory: 'Respiratory',
+  endocrine: 'Endocrine',
+  renal: 'Renal',
+  gastrointestinal: 'Digestive',
+  musculoskeletal: 'Musculoskeletal',
+  dermatological: 'Dermatological',
+  ophthalmological: 'Ophthalmological',
+  otorhinolaryngological: 'ENT',
+  psychiatric: 'Neurological',
+  general: 'General',
+}
+
 type AnswerEntry = {
   value: unknown
   skipped?: boolean
@@ -29,14 +44,28 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
   const [history, setHistory] = useState<Question[]>([])
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [visitedBodySystems, setVisitedBodySystems] = useState<string[]>([])
 
- const progress = session?.progress
+  const progress = session?.progress
+
+  const resolveBodySystemName = (q: Question | null): string | null => {
+    if (!q) return null
+    if (q.body_system_id) return bodySystemLookup[q.body_system_id.toLowerCase()] ?? q.body_system_id
+    return null
+  }
+
+  const trackSystem = useCallback((q: Question | null) => {
+    const name = resolveBodySystemName(q)
+    if (!name) return
+    setVisitedBodySystems((prev) => (prev.includes(name) ? prev : [...prev, name]))
+  }, [])
 
   // Seed the first question from the session on load.
   useEffect(() => {
     if (session?.current_question && !hasSubmitted) {
       setCurrentQuestion(session.current_question)
       setHasSubmitted(true)
+      trackSystem(session.current_question)
     }
   }, [session?.current_question, hasSubmitted])
 
@@ -86,11 +115,9 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
 
         // Branching: push current onto history, advance to server's next question.
         setHistory((prev) => [...prev.slice(-19), currentQuestion])
-        if (response.is_complete || !response.next_question) {
-          setCurrentQuestion(null)
-        } else {
-          setCurrentQuestion(response.next_question)
-        }
+        const nextQuestion = response.is_complete || !response.next_question ? null : response.next_question
+        setCurrentQuestion(nextQuestion)
+        trackSystem(nextQuestion)
 
         // Refresh session/progress from the server.
         qc.invalidateQueries({ queryKey: ['session', sessionId] })
@@ -159,6 +186,11 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
     [answers],
   )
 
+  const skippedCount = useMemo(
+    () => Object.keys(answers).filter((k) => answers[k]?.skipped).length,
+    [answers],
+  )
+
   return {
     // state
     session,
@@ -168,6 +200,9 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
     progress,
     totalQuestions: progress?.total_questions ?? 0,
     answered: answeredCount,
+    skipped: skippedCount,
+    bodySystemsCovered: visitedBodySystems,
+    estimatedTimeRemaining: progress?.estimated_time_remaining ?? null,
     isFirst,
     isLast,
     canGoNext,

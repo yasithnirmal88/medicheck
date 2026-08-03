@@ -1,6 +1,6 @@
 import React from 'react'
 import { Check } from 'lucide-react'
-import type { SectionKey } from '../../types/wizard'
+import type { SectionKey } from '@/features/profile/types/wizard'
 
 interface Step {
   key: SectionKey
