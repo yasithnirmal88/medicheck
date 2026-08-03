@@ -36,6 +36,7 @@ const UsersRolesPage = React.lazy(() => import('../features/cms/pages/UsersRoles
 const PublishingWorkflowsPage = React.lazy(() => import('../features/cms/pages/PublishingWorkflowsPage').then(m => ({ default: m.PublishingWorkflowsPage })))
 const SearchPage = React.lazy(() => import('../features/cms/pages/SearchPage').then(m => ({ default: m.SearchPage })))
 const SettingsPage = React.lazy(() => import('../features/cms/pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const ICDMappingPage = React.lazy(() => import('../features/cms/pages/ICDMappingPage').then(m => ({ default: m.ICDMappingPage || m.default })))
 const ContentFormPage = React.lazy(() => import('../features/cms/pages/ContentFormPage').then(m => ({ default: m.ContentFormPage })))
 const QuestionsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionsListPage })))
 const DiseasesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DiseasesListPage })))
@@ -157,6 +158,7 @@ export default function Router() {
           <Route path="users" element={<UsersRolesPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="settings" element={<SettingsPage />} />
+        <Route path="icd-mappings" element={<ICDMappingPage />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
