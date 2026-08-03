@@ -1,0 +1,165 @@
+import React from 'react'
+import { AlertTriangle, CheckCircle, Info, Zap } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+interface Tip {
+  icon: React.ReactNode
+  color: 'teal' | 'amber' | 'red' | 'blue'
+  text: string
+}
+
+function tipColor(color: Tip['color']) {
+  switch (color) {
+    case 'teal':
+      return 'border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-200'
+    case 'amber':
+      return 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200'
+    case 'red':
+      return 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200'
+    case 'blue':
+      return 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200'
+  }
+}
+
+function iconColor(color: Tip['color']) {
+  switch (color) {
+    case 'teal': return 'text-teal-500'
+    case 'amber': return 'text-amber-500'
+    case 'red': return 'text-red-500'
+    case 'blue': return 'text-blue-500'
+  }
+}
+
+interface HealthTipsProps {
+  lifestyle?: unknown
+  nutrition?: unknown
+  medicalHistory?: unknown
+  familyHistory?: unknown
+}
+
+export function HealthTips({ lifestyle, nutrition, medicalHistory, familyHistory }: HealthTipsProps) {
+  const tips = React.useMemo<Tip[]>(() => {
+    const result: Tip[] = []
+    if (!lifestyle && !nutrition && !medicalHistory && !familyHistory) return result
+
+    const l = (lifestyle ?? {}) as Record<string, unknown>
+    const n = (nutrition ?? {}) as Record<string, unknown>
+    const mh = (medicalHistory ?? {}) as Record<string, unknown>
+    const fh = (familyHistory ?? {}) as Record<string, unknown>
+
+    if (l.smoking === 'current') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Current smoking significantly increases cardiovascular and respiratory risk. Consider a cessation plan.' })
+    } else if (l.smoking === 'former') {
+      result.push({ icon: <CheckCircle className="h-4 w-4" />, color: 'teal', text: 'Former smoker — your body is already recovering. Staying smoke-free continues to reduce risk over time.' })
+    }
+
+    if (l.alcohol === 'heavy') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Heavy alcohol consumption is linked to liver disease, hypertension, and increased cancer risk.' })
+    } else if (l.alcohol === 'moderate') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'amber', text: 'Moderate drinking — consider reducing further for optimal health outcomes.' })
+    }
+
+    const caffeine = Number(l.caffeine_intake) || 0
+    if (caffeine > 5) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `High caffeine intake (${caffeine} cups/day) may cause sleep disruption and anxiety. Consider reducing.` })
+    }
+
+    const screenTime = Number(l.screen_time) || 0
+    if (screenTime > 8) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `Excessive screen time (${screenTime}h/day) can strain eyes and affect sleep. Take regular breaks.` })
+    }
+
+    const water = Number(n.water_intake) || 0
+    if (water < 6) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Low water intake (${water} glasses/day). Aim for at least 6-8 glasses daily for optimal hydration.` })
+    }
+
+    if (n.fast_food_frequency === 'daily') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Daily fast food is associated with higher calorie, sodium, and unhealthy fat intake. Consider meal prepping.' })
+    } else if (n.fast_food_frequency === 'weekly') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'amber', text: 'Weekly fast food is manageable, but try to cook more meals at home for better nutrition control.' })
+    }
+
+    const fruit = Number(n.fruit_intake) || 0
+    if (fruit < 2) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Low fruit intake (${fruit} servings/day). Fruits provide essential vitamins and fiber — aim for 2-3 servings.` })
+    }
+
+    const veg = Number(n.vegetable_intake) || 0
+    if (veg < 3) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Low vegetable intake (${veg} servings/day). Vegetables are rich in micronutrients — aim for 3-5 servings.` })
+    }
+
+    if (n.sugar_intake === 'high') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'High sugar intake increases risk of obesity, type 2 diabetes, and dental issues.' })
+    }
+
+    if (n.salt_intake === 'high') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'High salt intake can raise blood pressure. Consider reducing processed food and adding herbs for flavor.' })
+    }
+
+    const diet = n.diet_type as string
+    if (diet === 'vegan' || diet === 'vegetarian') {
+      result.push({ icon: <Zap className="h-4 w-4" />, color: 'teal', text: `${diet === 'vegan' ? 'Vegan' : 'Vegetarian'} diets can be nutritious — ensure adequate B12, iron, and protein intake.` })
+    }
+
+    const conditions = (mh.conditions as string[]) ?? []
+    if (conditions.includes('hypertension')) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Hypertension detected — monitor blood pressure regularly and limit sodium intake.' })
+    }
+    if (conditions.includes('diabetes')) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'Diabetes noted — regular blood sugar monitoring and dietary management are important.' })
+    }
+    if (conditions.includes('heart_disease')) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Heart disease history — regular cardiac check-ups and a heart-healthy lifestyle are essential.' })
+    }
+    if (conditions.includes('cancer')) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Cancer history — ensure regular follow-ups and screening as recommended by your doctor.' })
+    }
+    if (conditions.includes('stroke')) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Stroke history — manage risk factors like blood pressure, cholesterol, and avoid smoking.' })
+    }
+    const surgeriesCount = Number(mh.surgeries_count) || 0
+    if (surgeriesCount > 3) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Multiple surgeries (${surgeriesCount}) — keep detailed medical records and inform your doctor.` })
+    }
+    const hospitalAdmissions = Number(mh.hospital_admissions) || 0
+    if (hospitalAdmissions > 5) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Frequent hospital admissions (${hospitalAdmissions}) — consider a care coordination plan.` })
+    }
+    const organTransplants = Number(mh.organ_transplants) || 0
+    if (organTransplants > 0) {
+      result.push({ icon: <Zap className="h-4 w-4" />, color: 'teal', text: `Organ transplant history (${organTransplants}) — ensure regular immunosuppression monitoring.` })
+    }
+
+    const familyDiseases = (fh.diseases as string[]) ?? []
+    if (familyDiseases.length > 0) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Family history of ${familyDiseases.join(', ')} — consider proactive screening and preventive measures.` })
+    }
+
+    return result
+  }, [lifestyle, nutrition, medicalHistory, familyHistory])
+
+  if (tips.length === 0) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+        <p className="text-sm text-slate-500 dark:text-slate-400">Complete your health sections to see personalized insights.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+        <Zap className="h-4 w-4 text-blue-500" />
+        Health Insights
+      </h3>
+      {tips.map((tip, i) => (
+        <div key={i} className={cn('rounded-xl border p-3 text-sm flex items-start gap-2', tipColor(tip.color))}>
+          <span className={cn('mt-0.5 shrink-0', iconColor(tip.color))}>{tip.icon}</span>
+          <span>{tip.text}</span>
+        </div>
+      ))}
+    </div>
+  )
+}

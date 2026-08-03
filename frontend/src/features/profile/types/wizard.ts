@@ -101,11 +101,15 @@ export interface MentalHealthData {
 
 export interface MedicalHistoryEntry {
   id: string
-  condition: string
+  conditions: string[]
   diagnosis_date: string
   severity: string
   status: string
   notes: string
+  surgeries_count: string
+  hospital_admissions: string
+  previous_fractures: string
+  organ_transplants: string
 }
 
 export interface SurgeryEntry {
@@ -120,7 +124,7 @@ export interface SurgeryEntry {
 export interface FamilyEntry {
   id: string
   relative: string
-  disease: string
+  diseases: string[]
   age_at_diagnosis: string
   current_status: string
   notes: string

@@ -3,7 +3,7 @@ import { FieldError } from 'react-hook-form'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type FieldKind = 'text' | 'number' | 'select' | 'radio' | 'checkbox' | 'date' | 'textarea'
+export type FieldKind = 'text' | 'number' | 'select' | 'radio' | 'checkbox' | 'date' | 'textarea' | 'photo' | 'slider' | 'card' | 'chip' | 'emoji' | 'rating' | 'animated'
 
 export interface OptionSpec {
   value: string
@@ -19,7 +19,7 @@ export interface FieldSpec {
   suffix?: string
   help?: string
   warning?: string
-  cols?: 1 | 2 | 3
+  cols?: 1 | 2 | 3 | 4 | 5
   min?: number
   max?: number
   step?: number
@@ -110,6 +110,78 @@ export const Field: React.FC<{ spec: FieldSpec; bag: FieldBag; className?: strin
                     'rounded-xl border px-3 py-2 text-sm font-medium transition-colors',
                     active
                       ? 'border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        )
+      case 'slider':
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <input
+                type="range"
+                min={spec.min ?? 0}
+                max={spec.max ?? 100}
+                step={spec.step ?? 1}
+                value={(bag.watch(spec.name) as string) ?? spec.min ?? 0}
+                onChange={(e) => setValue(spec.name, e.target.value)}
+                className="flex-1 accent-blue-600 dark:accent-blue-400"
+                aria-invalid={hasError}
+              />
+              <span className="ml-3 min-w-[3ch] text-right text-sm font-medium text-blue-600 dark:text-blue-400">
+                {String(bag.watch(spec.name) ?? spec.min ?? 0)}{spec.suffix ?? ''}
+              </span>
+            </div>
+            <div className="flex justify-between text-[11px] text-slate-400">
+              <span>{spec.min ?? 0}{spec.suffix ?? ''}</span>
+              <span>{spec.max ?? 100}{spec.suffix ?? ''}</span>
+            </div>
+          </div>
+        )
+      case 'card':
+        return (
+          <div className={cn('grid gap-3', spec.cols === 3 ? 'grid-cols-1 sm:grid-cols-3' : spec.cols === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1')}>
+            {spec.options?.map((opt) => {
+              const active = bag.watch(spec.name) === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValue(spec.name, opt.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    'rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors',
+                    active
+                      ? 'border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/15 dark:text-blue-300'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        )
+      case 'chip':
+        return (
+          <div className="flex flex-wrap gap-2">
+            {spec.options?.map((opt) => {
+              const active = bag.watch(spec.name) === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValue(spec.name, opt.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                    active
+                      ? 'border-blue-600 bg-blue-600 text-white dark:border-blue-400 dark:bg-blue-500'
                       : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
                   )}
                 >

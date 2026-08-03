@@ -179,5 +179,5 @@ export function mergeDraft(base: WizardState, draft: Partial<WizardState>): Wiza
       merged[key as string] = value
     }
   }
-  return merged
+  return merged as unknown as WizardState
 }
