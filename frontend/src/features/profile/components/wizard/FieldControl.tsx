@@ -191,6 +191,81 @@ export const Field: React.FC<{ spec: FieldSpec; bag: FieldBag; className?: strin
             })}
           </div>
         )
+      case 'emoji':
+        return (
+          <div className="flex flex-wrap gap-2">
+            {spec.options?.map((opt) => {
+              const active = bag.watch(spec.name) === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValue(spec.name, opt.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    'rounded-xl border px-4 py-2 text-lg font-medium transition-all duration-200',
+                    active
+                      ? 'border-blue-500 bg-blue-50 scale-110 shadow-md dark:border-blue-400 dark:bg-blue-500/15'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:scale-105 dark:border-slate-700 dark:bg-slate-800',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        )
+      case 'rating':
+        return (
+          <div className="flex gap-1">
+            {Array.from({ length: spec.max ?? 5 }, (_, i) => {
+              const val = i + 1
+              const current = Number(bag.watch(spec.name)) || 0
+              const filled = val <= current
+              return (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setValue(spec.name, String(val))}
+                  className={cn(
+                    'text-2xl transition-colors duration-200',
+                    filled ? 'text-amber-400' : 'text-slate-200 dark:text-slate-600',
+                  )}
+                  aria-label={`Rate ${val} of ${spec.max ?? 5}`}
+                >
+                  {filled ? '★' : '☆'}
+                </button>
+              )
+            })}
+            <span className="ml-2 self-center text-sm text-slate-500 dark:text-slate-400">
+              {String(bag.watch(spec.name) ?? '—')}
+            </span>
+          </div>
+        )
+      case 'animated':
+        return (
+          <div className={cn('grid gap-3', spec.cols === 3 ? 'grid-cols-1 sm:grid-cols-3' : spec.cols === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1')}>
+            {spec.options?.map((opt) => {
+              const active = bag.watch(spec.name) === opt.value
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValue(spec.name, opt.value)}
+                  aria-pressed={active}
+                  className={cn(
+                    'rounded-xl border p-4 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5',
+                    active
+                      ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02] dark:border-blue-400 dark:bg-blue-500/15'
+                      : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
+                  )}
+                >
+                  <div className="text-lg font-semibold text-slate-700 dark:text-slate-200">{opt.label}</div>
+                </button>
+              )
+            })}
+          </div>
+        )
       case 'checkbox':
         return (
           <button

@@ -137,6 +137,38 @@ export function HealthTips({ lifestyle, nutrition, medicalHistory, familyHistory
       result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Family history of ${familyDiseases.join(', ')} — consider proactive screening and preventive measures.` })
     }
 
+    const exerciseDays = Number(l.exercise_days) || 0
+    if (exerciseDays < 3) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `Low exercise frequency (${exerciseDays} days/week). Aim for at least 150 minutes of moderate activity per week.` })
+    }
+
+    const stepCount = Number(l.daily_step_count) || 0
+    if (stepCount < 5000 && stepCount > 0) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: `Low daily step count (${stepCount}). Try to reach 7,000-10,000 steps for cardiovascular health.` })
+    }
+
+    const sleepHours = Number(l.avg_sleep_hours) || 0
+    if (sleepHours < 6) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: `Insufficient sleep (${sleepHours}h). Aim for 7-9 hours for optimal recovery and cognitive function.` })
+    } else if (sleepHours > 9) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'amber', text: `Excessive sleep (${sleepHours}h). Consistently sleeping too much may indicate underlying issues.` })
+    }
+
+    const stressLevel = Number(l.stress_level) || 0
+    if (stressLevel >= 4) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `High stress level (${stressLevel}/5). Consider stress management techniques like meditation or exercise.` })
+    }
+
+    const burnoutRisk = Number(l.burnout_risk) || 0
+    if (burnoutRisk >= 3) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'High burnout risk detected. Prioritize rest, set boundaries, and consider professional support.' })
+    }
+
+    const mood = l.mood as string
+    if (mood === 'low' || mood === 'very_low') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `Low mood reported. Regular physical activity and social connection can help improve mood.` })
+    }
+
     return result
   }, [lifestyle, nutrition, medicalHistory, familyHistory])
 

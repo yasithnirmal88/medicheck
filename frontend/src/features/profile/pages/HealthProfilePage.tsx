@@ -311,6 +311,33 @@ function renderSection(
     )
   }
 
+  if (key === 'physical_activity') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.physical_activity} onChange={(v) => setSection('physical_activity', v)} />
+        <HealthTips lifestyle={state.lifestyle} />
+      </div>
+    )
+  }
+
+  if (key === 'sleep') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.sleep} onChange={(v) => setSection('sleep', v)} />
+        <HealthTips lifestyle={state.lifestyle} />
+      </div>
+    )
+  }
+
+  if (key === 'mental_health') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.mental_health} onChange={(v) => setSection('mental_health', v)} />
+        <HealthTips lifestyle={state.lifestyle} />
+      </div>
+    )
+  }
+
   return <SectionForm sectionKey={key} data={state[key]} onChange={(v) => setSection(key, v)} />
 }
 
