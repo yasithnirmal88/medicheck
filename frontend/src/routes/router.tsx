@@ -10,6 +10,7 @@ const Dashboard = React.lazy(() => import('../features/dashboard/pages/Dashboard
 const QuestionnaireListPage = React.lazy(() => import('../features/questionnaire/pages/QuestionnaireListPage'))
 const QuestionnaireSessionPage = React.lazy(() => import('../features/questionnaire/pages/QuestionnaireSessionPage'))
 const QuestionnaireHistoryPage = React.lazy(() => import('../features/questionnaire/pages/QuestionnaireHistoryPage'))
+const AssessmentSelectionPage = React.lazy(() => import('../features/questionnaire/pages/AssessmentSelectionPage'))
 const AdminDashboard = React.lazy(() => import('../features/admin/pages/AdminDashboard'))
 const PatientDashboard = React.lazy(() => import('../features/dashboard/pages/PatientDashboard'))
 const AssessmentHistory = React.lazy(() => import('../features/dashboard/pages/AssessmentHistory'))
@@ -21,6 +22,7 @@ const ComparePage = React.lazy(() => import('../features/health-timeline/pages/C
 const ProfileWizard = React.lazy(() => import('../features/profile/pages/ProfileWizard'))
 const ProfileSections = React.lazy(() => import('../features/profile/pages/ProfileSections'))
 const ProfileVersions = React.lazy(() => import('../features/profile/pages/ProfileVersions'))
+const HealthProfilePage = React.lazy(() => import('../features/profile/pages/HealthProfilePage'))
 const CMSLayout = React.lazy(() => import('../features/cms/layouts/CMSLayout').then(m => ({ default: m.CMSLayout })))
 const CMSDashboardPage = React.lazy(() => import('../features/cms/pages/CMSDashboardPage').then(m => ({ default: m.CMSDashboardPage })))
 const QuestionnaireBuilderPage = React.lazy(() => import('../features/cms/pages/QuestionnaireBuilderPage').then(m => ({ default: m.QuestionnaireBuilderPage })))
@@ -75,12 +77,13 @@ export default function Router() {
             </RequireAuth>
           }
         />
-        <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><HealthProfilePage /></RequireAuth>} />
         <Route path="/profile/wizard" element={<RequireAuth><ProfileWizard /></RequireAuth>} />
         <Route path="/profile/sections" element={<RequireAuth><ProfileSections /></RequireAuth>} />
         <Route path="/profile/versions" element={<RequireAuth><ProfileVersions /></RequireAuth>} />
         <Route path="/" element={<Navigate to="/app" replace />} />
         <Route path="/questionnaires" element={<RequireAuth><QuestionnaireListPage /></RequireAuth>} />
+        <Route path="/assessments" element={<RequireAuth><AssessmentSelectionPage /></RequireAuth>} />
         <Route path="/questionnaires/history" element={<RequireAuth><QuestionnaireHistoryPage /></RequireAuth>} />
         <Route path="/questionnaires/:id" element={<RequireAuth><QuestionnaireSessionPage /></RequireAuth>} />
         <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
