@@ -636,3 +636,14 @@ export const ENTITY_TYPES = [
 ] as const
 
 export type EntityType = (typeof ENTITY_TYPES)[number]
+
+// ---- Editor field definition ----
+export interface FieldDefinition {
+  name: string
+  label: string
+  type: 'text' | 'textarea' | 'select' | 'number' | 'boolean' | 'json'
+  required?: boolean
+  options?: { value: string; label: string }[]
+  hint?: string
+  section?: string
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { SearchInput, TableSkeleton, EmptyState } from '../components/ContentLayout'
 import { cmsApi } from '../api/cmsApi'
+import { entityTypeToSection } from './ContentListPages'
 import { cn } from '@/lib/utils'
 import { Search, FileText, Loader2 } from 'lucide-react'
 import type { EntitySearchResult } from '../types'
@@ -77,7 +78,8 @@ export const SearchPage: React.FC = () => {
                   <div
                     key={`${item.entity_type}-${item.id}`}
                     onClick={() => {
-                      const path = `/cms/content/${item.entity_type}/${item.id}`
+                      const section = entityTypeToSection[item.entity_type || ''] || item.entity_type
+                      const path = `/doctor/${section}/${item.id}`
                       window.location.href = path
                     }}
                     className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer"

@@ -11,6 +11,26 @@ import type {
 } from '../types'
 import type { EntityType } from '../types'
 
+export const entityTypeToSection: Record<string, string> = {
+  question: 'questions',
+  disease: 'diseases',
+  body_system: 'body-systems',
+  symptom: 'symptoms',
+  indicator: 'indicators',
+  lab_test: 'lab-tests',
+  imaging: 'imaging',
+  recommendation: 'recommendations',
+  lifestyle: 'lifestyle',
+  exercise: 'exercise',
+  nutrition: 'nutrition',
+  evidence: 'evidence',
+  template: 'templates',
+  medication: 'medications',
+  guideline: 'guidelines',
+  rule: 'rules',
+  severity_threshold: 'thresholds',
+}
+
 function dateCell(value: string) {
   return <span className="text-slate-500 dark:text-slate-400 text-xs">{new Date(value).toLocaleDateString()}</span>
 }
@@ -46,13 +66,15 @@ function makeListPage<T extends { id: string }>(
   entityType: EntityType, title: string, description: string,
   columns: Column<T>[], basePath?: string,
 ): ListPage {
+  const section = entityTypeToSection[entityType] || entityType
+  const computedBasePath = basePath || `/doctor/${section}`
   const Page: ListPage = () => (
     <ContentListPage<T>
       entityType={entityType}
       columns={columns}
       title={title}
       description={description}
-      basePath={basePath}
+      basePath={computedBasePath}
     />
   )
   Page.displayName = `${title.replace(/\s+/g, '')}ListPage`

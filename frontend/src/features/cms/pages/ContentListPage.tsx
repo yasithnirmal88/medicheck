@@ -22,7 +22,7 @@ export function ContentListPage<T extends { id: string }>({
   const [query, setQuery] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const limit = 20
-  const path = basePath || `/cms/${entityType.replace(/_/g, '-')}`
+  const path = basePath || `/doctor/${entityType.replace(/_/g, '-')}`
 
   const { data, isLoading } = useContentList<T>(entityType as EntityType, { skip, limit, query: query || undefined })
   const deleteMutation = useDeleteContent(entityType as EntityType)
