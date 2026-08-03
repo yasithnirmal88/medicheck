@@ -379,3 +379,13 @@ export function useReorderGroups() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['cms', 'builder'] }); toast.success('Groups reordered') },
   })
 }
+
+// ---- Generic entity search/autocomplete ----
+export function useEntitySearch(query?: string, entityType?: string, limit = 20) {
+  return useQuery<EntitySearchResult[]>({
+    queryKey: ['cms', 'search', entityType || 'all', query, limit],
+    queryFn: () => cmsApi.search(query || '', entityType, limit),
+    enabled: !!query && query.trim().length > 0,
+    staleTime: 1000 * 60, // 1 minute
+  })
+}

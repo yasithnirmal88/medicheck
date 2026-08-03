@@ -66,7 +66,7 @@ function getSectionCompletion(key: SectionKey, state: WizardState): { filled: nu
     const count = value.length
     return count > 0 ? { filled: count, total: count, missing: [] } : { filled: 0, total: 0, missing: [] }
   }
-  const record = (value ?? {}) as Record<string, unknown>
+  const record = (value ?? {}) as unknown as Record<string, unknown>
   let filled = 0
   let total = 0
   const missing: string[] = []

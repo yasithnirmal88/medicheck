@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import { CheckCircle2, XCircle, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { ContentLayout, Tabs, StatusBadge, EmptyState, TableSkeleton, ConfirmAction, FormField } from '../components/ContentLayout'
+import { ContentLayout, Tabs, StatusBadge, EmptyState, TableSkeleton, FormField } from '../components/ContentLayout'
+import ReviewDialog from '../components/ReviewDialog'
+import ApprovalDialog from '../components/ApprovalDialog'
 import { useApprovals, useReviews, usePublishingJobs, useChangeRequests, useApproveJob } from '../hooks/useCmsQueries'
 import { cmsApi } from '../api/cmsApi'
 import type { Approval, Review, PublishingJob, ChangeRequest } from '../types'
@@ -15,8 +17,13 @@ const approvalTabs = [
 
 export const ApprovalQueuePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pending')
-  const [rejectTarget, setRejectTarget] = useState<{ id: string; type: string } | null>(null)
-  const [rejectReason, setRejectReason] = useState('')
+  const [reviewDialogTarget, setReviewDialogTarget] = useState<{
+    id: string
+    action: 'reject' | 'request_changes'
+    entity_type?: string
+    entity_id?: string
+  } | null>(null)
+  const [approvalDialogTarget, setApprovalDialogTarget] = useState<string | null>(null)
   const [completeReviewTarget, setCompleteReviewTarget] = useState<string | null>(null)
 
   const { data: approvals, isLoading: approvalsLoading } = useApprovals()
@@ -25,21 +32,59 @@ export const ApprovalQueuePage: React.FC = () => {
   const { data: changeRequests, isLoading: changesLoading } = useChangeRequests()
   const approveJob = useApproveJob()
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = async (id: string, comment?: string) => {
     try {
-      await cmsApi.publishing.approveEntity(id)
+      await cmsApi.publishing.approveEntity(id, comment)
       toast.success('Approved')
-    } catch { toast.error('Failed to approve') }
+      setApprovalDialogTarget(null)
+    } catch {
+      toast.error('Failed to approve')
+    }
   }
 
-  const handleReject = async () => {
-    if (!rejectTarget) return
+  const handleReviewSubmit = async (payload: {
+    reason: string
+    clinicalNotes?: string
+    suggestedImprovements?: string
+    evidenceReferences?: string[]
+    severity?: 'low' | 'medium' | 'high'
+  }) => {
+    if (!reviewDialogTarget) return
     try {
-      await cmsApi.publishing.rejectApproval(rejectTarget.id, rejectReason)
-      toast.success('Rejected')
-      setRejectTarget(null)
-      setRejectReason('')
-    } catch { toast.error('Failed to reject') }
+      if (reviewDialogTarget.action === 'reject') {
+        // Reject the approval with the required reason
+        await cmsApi.publishing.rejectApproval(reviewDialogTarget.id, payload.reason)
+        // Attach detailed reviewer notes as an approval comment for traceability
+        const commentParts: string[] = []
+        if (payload.clinicalNotes) commentParts.push(`Clinical notes: ${payload.clinicalNotes}`)
+        if (payload.suggestedImprovements) commentParts.push(`Suggested improvements: ${payload.suggestedImprovements}`)
+        if (payload.evidenceReferences && payload.evidenceReferences.length) commentParts.push(`Evidence references: ${payload.evidenceReferences.join('; ')}`)
+        if (payload.severity) commentParts.push(`Severity: ${payload.severity}`)
+        if (commentParts.length) {
+          await cmsApi.publishing.addApprovalComment(reviewDialogTarget.id, commentParts.join('\n'))
+        }
+      } else {
+        // For request_changes, create a change request and include structured reviewer info in the description
+        const descriptionParts: string[] = []
+        if (payload.clinicalNotes) descriptionParts.push(`Clinical notes:\n${payload.clinicalNotes}`)
+        if (payload.suggestedImprovements) descriptionParts.push(`Suggested improvements:\n${payload.suggestedImprovements}`)
+        if (payload.evidenceReferences && payload.evidenceReferences.length) descriptionParts.push(`Evidence references: ${payload.evidenceReferences.join('; ')}`)
+        if (payload.severity) descriptionParts.push(`Severity: ${payload.severity}`)
+
+        await cmsApi.publishing.createChangeRequest({
+          entity_type: reviewDialogTarget.entity_type,
+          entity_id: reviewDialogTarget.entity_id,
+          title: payload.suggestedImprovements || 'Requested changes',
+          description: descriptionParts.join('\n\n') || payload.reason || 'Requested changes',
+          changes: {},
+          reason: payload.reason,
+        })
+      }
+      toast.success('Submitted')
+      setReviewDialogTarget(null)
+    } catch (err) {
+      toast.error('Failed to submit')
+    }
   }
 
   const handleCompleteReview = async (id: string) => {
@@ -77,10 +122,10 @@ export const ApprovalQueuePage: React.FC = () => {
                     <p className="text-xs text-slate-500">Requested by: {a.requested_by}{a.comments?.length ? ` — ${a.comments[0].comment}` : ''}</p>
                   </div>
                   <div className="flex gap-2 shrink-0">
-                    <button onClick={() => handleApprove(a.id)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition">
+                    <button onClick={() => setApprovalDialogTarget(a.id)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Approve
                     </button>
-                    <button onClick={() => setRejectTarget({ id: a.id, type: 'approval' })} className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition">
+                                        <button onClick={() => setReviewDialogTarget({ id: a.id, action: 'reject', entity_type: a.entity_type, entity_id: a.entity_id })} className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition">
                       <XCircle className="w-3.5 h-3.5" /> Reject
                     </button>
                   </div>
@@ -165,14 +210,23 @@ export const ApprovalQueuePage: React.FC = () => {
         </div>
       )}
 
-      <ConfirmAction
-        open={!!rejectTarget}
-        onClose={() => setRejectTarget(null)}
-        onConfirm={() => { setRejectTarget({ id: rejectTarget!.id, type: rejectTarget!.type }); handleReject() }}
-        title="Reject Approval"
-        message="Are you sure you want to reject this approval?"
-        confirmLabel="Reject"
-        variant="danger"
+      <ReviewDialog
+        open={!!reviewDialogTarget}
+        onClose={() => setReviewDialogTarget(null)}
+        action={reviewDialogTarget?.action || 'reject'}
+        onSubmit={handleReviewSubmit}
+      />
+
+      <ApprovalDialog
+        open={!!approvalDialogTarget}
+        onClose={() => setApprovalDialogTarget(null)}
+        approvalId={approvalDialogTarget}
+        onApprove={(comment) => {
+          if (!approvalDialogTarget) {
+            return Promise.resolve()
+          }
+          return handleApprove(approvalDialogTarget, comment)
+        }}
       />
     </ContentLayout>
   )

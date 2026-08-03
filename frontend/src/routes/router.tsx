@@ -36,6 +36,7 @@ const UsersRolesPage = React.lazy(() => import('../features/cms/pages/UsersRoles
 const PublishingWorkflowsPage = React.lazy(() => import('../features/cms/pages/PublishingWorkflowsPage').then(m => ({ default: m.PublishingWorkflowsPage })))
 const SearchPage = React.lazy(() => import('../features/cms/pages/SearchPage').then(m => ({ default: m.SearchPage })))
 const SettingsPage = React.lazy(() => import('../features/cms/pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const ContentFormPage = React.lazy(() => import('../features/cms/pages/ContentFormPage').then(m => ({ default: m.ContentFormPage })))
 const QuestionsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionsListPage })))
 const DiseasesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DiseasesListPage })))
 const BodySystemsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.BodySystemsListPage })))
@@ -127,6 +128,8 @@ export default function Router() {
           <Route path="guidelines" element={<ClinicalGuidelinesListPage />} />
           <Route path="rules" element={<DecisionRulesListPage />} />
           <Route path="thresholds" element={<SeverityThresholdsListPage />} />
+          <Route path=":entitySlug/new" element={<ContentFormPage />} />
+          <Route path=":entitySlug/:id" element={<ContentFormPage />} />
 
           {/* Builders */}
           <Route path="builder" element={<QuestionnaireBuilderPage />} />
