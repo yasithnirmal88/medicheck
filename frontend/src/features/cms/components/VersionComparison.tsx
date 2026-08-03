@@ -20,29 +20,72 @@ function isObject(v: unknown) {
 }
 
 function findIdKey(obj: any): string | null {
-  if (!isObject(obj)) return null
-  const keys = Object.keys(obj)
-  const idKeys = ['id', 'uuid', 'code', 'slug']
-  for (const k of idKeys) {
-    if (keys.includes(k)) return k
+  // Accept both objects and arrays (we'll examine elements for id-like keys)
+  if (!obj) return null
+  const idKeys = ['id', 'uuid', 'code', 'slug', 'key']
+
+  // If obj is an object, check its keys
+  if (isObject(obj)) {
+    const keys = Object.keys(obj)
+    for (const k of idKeys) if (keys.includes(k)) return k
+    return null
   }
+
+  // If obj is an array, scan elements and return the first idKey found in any element
+  if (Array.isArray(obj)) {
+    for (const el of obj) {
+      if (isObject(el)) {
+        const keys = Object.keys(el)
+        for (const k of idKeys) if (keys.includes(k)) return k
+      }
+    }
+  }
+
   return null
 }
 
-function arrayDiffById(cur: any[], prev: any[]) {
-  const curMap = new Map<string, any>()
-  const prevMap = new Map<string, any>()
-
-  const idKey = (cur && cur.length && findIdKey(cur[0])) || (prev && prev.length && findIdKey(prev[0])) || null
+function arrayDiffById(cur: any[] = [], prev: any[] = []) {
+  const idKey = findIdKey(cur.length ? cur : prev.length ? prev : null)
 
   if (idKey) {
-    cur.forEach((it) => curMap.set(String((it as any)[idKey]), it))
-    prev.forEach((it) => prevMap.set(String((it as any)[idKey]), it))
+    const curMap = new Map<string, any>()
+    const prevMap = new Map<string, any>()
 
-    const added = cur.filter((it) => !prevMap.has(String((it as any)[idKey])))
-    const removed = prev.filter((it) => !curMap.has(String((it as any)[idKey])))
-    const common = cur.filter((it) => prevMap.has(String((it as any)[idKey])))
-    return { added, removed, common, idKey }
+    for (const it of cur) {
+      const k = String((it as any)[idKey] ?? JSON.stringify(it))
+      curMap.set(k, it)
+    }
+    for (const it of prev) {
+      const k = String((it as any)[idKey] ?? JSON.stringify(it))
+      prevMap.set(k, it)
+    }
+
+    const added: any[] = []
+    const removed: any[] = []
+    const common: any[] = []
+    const modified: any[] = []
+
+    // detect added and modified
+    for (const [k, it] of curMap.entries()) {
+      if (!prevMap.has(k)) {
+        added.push(it)
+      } else {
+        common.push(it)
+        const prevIt = prevMap.get(k)
+        if (JSON.stringify(prevIt) !== JSON.stringify(it)) {
+          modified.push({ id: k, previous: prevIt, current: it })
+        }
+      }
+    }
+
+    // detect removed
+    for (const [k, it] of prevMap.entries()) {
+      if (!curMap.has(k)) {
+        removed.push(it)
+      }
+    }
+
+    return { added, removed, common, modified, idKey }
   }
 
   // fallback to stringify diff
@@ -50,7 +93,7 @@ function arrayDiffById(cur: any[], prev: any[]) {
   const prevSet = new Set(prev.map((v) => JSON.stringify(v)))
   const added = cur.filter((v) => !prevSet.has(JSON.stringify(v)))
   const removed = prev.filter((v) => !curSet.has(JSON.stringify(v)))
-  return { added, removed, common: [], idKey: null }
+  return { added, removed, common: [], modified: [], idKey: null }
 }
 
 export function VersionComparison({
