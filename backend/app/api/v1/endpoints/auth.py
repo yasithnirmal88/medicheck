@@ -87,6 +87,6 @@ async def get_me(
 async def delete_account(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[AsyncSession, Depends(get_db)],
-) -> None:
+):
     service = _get_auth_service(session)
     await service.deactivate_user(current_user.id)

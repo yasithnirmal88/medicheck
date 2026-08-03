@@ -1,5 +1,3 @@
-version: "3.9"
-
 x-logging: &default-logging
   driver: "json-file"
   options:
@@ -69,16 +67,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
     logging: *default-logging
-    # Zero-downtime: ensure a rolling update strategy
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
-      rollback_config:
-        parallelism: 0
-        order: stop-first
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8000/api/v1/health"]
       interval: 30s
@@ -139,15 +127,6 @@ services:
       - api
     restart: unless-stopped
     logging: *default-logging
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
-      rollback_config:
-        parallelism: 0
-        order: stop-first
 
 volumes:
   postgres_data:

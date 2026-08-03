@@ -15,9 +15,9 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_index("ix_lifestyles_profile_id", "lifestyles", ["profile_id"])
-    op.create_index("ix_nutritions_profile_id", "nutritions", ["profile_id"])
-    op.create_index("ix_personal_infos_profile_id", "personal_infos", ["profile_id"])
+    op.execute("CREATE INDEX IF NOT EXISTS ix_lifestyles_profile_id ON lifestyles (profile_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_nutritions_profile_id ON nutritions (profile_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_personal_infos_profile_id ON personal_infos (profile_id)")
 
 
 def downgrade() -> None:

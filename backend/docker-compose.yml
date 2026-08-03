@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   api:
     build:
@@ -10,6 +8,9 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
     volumes:
       - .:/app
       - /app/__pycache__
@@ -28,6 +29,9 @@ services:
     container_name: medicheck-worker
     env_file:
       - .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
     volumes:
       - .:/app
       - /app/__pycache__
@@ -46,6 +50,9 @@ services:
     container_name: medicheck-beat
     env_file:
       - .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
     volumes:
       - .:/app
       - /app/__pycache__
