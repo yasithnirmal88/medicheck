@@ -36,6 +36,8 @@ const UsersRolesPage = React.lazy(() => import('../features/cms/pages/UsersRoles
 const PublishingWorkflowsPage = React.lazy(() => import('../features/cms/pages/PublishingWorkflowsPage').then(m => ({ default: m.PublishingWorkflowsPage })))
 const SearchPage = React.lazy(() => import('../features/cms/pages/SearchPage').then(m => ({ default: m.SearchPage })))
 const SettingsPage = React.lazy(() => import('../features/cms/pages/SettingsPage').then(m => ({ default: m.SettingsPage })))
+const ICDMappingPage = React.lazy(() => import('../features/cms/pages/ICDMappingPage').then(m => ({ default: m.ICDMappingPage || m.default })))
+const ContentFormPage = React.lazy(() => import('../features/cms/pages/ContentFormPage').then(m => ({ default: m.ContentFormPage })))
 const QuestionsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionsListPage })))
 const DiseasesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DiseasesListPage })))
 const BodySystemsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.BodySystemsListPage })))
@@ -52,6 +54,12 @@ const MedicationsListPage = React.lazy(() => import('../features/cms/pages/Conte
 const ClinicalGuidelinesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.ClinicalGuidelinesListPage })))
 const DecisionRulesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DecisionRulesListPage })))
 const SeverityThresholdsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.SeverityThresholdsListPage })))
+
+const DiseaseCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DiseaseCategoriesListPage })))
+const BodySystemCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.BodySystemCategoriesListPage })))
+const RecommendationCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.RecommendationCategoriesListPage })))
+const QuestionCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionCategoriesListPage })))
+const QuestionTagsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionTagsListPage })))
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, loading } = useAuth()
@@ -127,6 +135,13 @@ export default function Router() {
           <Route path="guidelines" element={<ClinicalGuidelinesListPage />} />
           <Route path="rules" element={<DecisionRulesListPage />} />
           <Route path="thresholds" element={<SeverityThresholdsListPage />} />
+          <Route path="disease-categories" element={<DiseaseCategoriesListPage />} />
+          <Route path="body-system-categories" element={<BodySystemCategoriesListPage />} />
+          <Route path="recommendation-categories" element={<RecommendationCategoriesListPage />} />
+          <Route path="question-categories" element={<QuestionCategoriesListPage />} />
+          <Route path="question-tags" element={<QuestionTagsListPage />} />
+          <Route path=":entitySlug/new" element={<ContentFormPage />} />
+          <Route path=":entitySlug/:id" element={<ContentFormPage />} />
 
           {/* Builders */}
           <Route path="builder" element={<QuestionnaireBuilderPage />} />
@@ -143,6 +158,7 @@ export default function Router() {
           <Route path="users" element={<UsersRolesPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="settings" element={<SettingsPage />} />
+        <Route path="icd-mappings" element={<ICDMappingPage />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

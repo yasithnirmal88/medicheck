@@ -1,16 +1,16 @@
 import React, { useState } from 'react'
 import AppLayout from '@/layouts/AppLayout'
 import Card from '@/shared/ui/Card'
-import { useReports } from '../hooks/useTimeline'
+import { useTimelineEvents } from '../hooks/useTimeline'
 import { Link } from 'react-router-dom'
 
 export default function TimelinePage() {
   const [order, setOrder] = useState<'desc' | 'asc'>('desc')
-  const { data: reports, isLoading } = useReports(50, 0)
+  const { data: events, isLoading } = useTimelineEvents(200, 0)
 
-  const sorted = reports ? [...reports].sort((a: any, b: any) => {
-    const da = new Date(a.created_at || a.started_at || 0).getTime()
-    const db = new Date(b.created_at || b.started_at || 0).getTime()
+  const sorted = events ? [...events].sort((a: any, b: any) => {
+    const da = new Date(a.time || a.created_at || a.started_at || 0).getTime()
+    const db = new Date(b.time || b.created_at || b.started_at || 0).getTime()
     return order === 'desc' ? db - da : da - db
   }) : []
 
@@ -28,37 +28,38 @@ export default function TimelinePage() {
           {isLoading ? (
             <div>Loading...</div>
           ) : sorted.length === 0 ? (
-            <div className="text-sm text-gray-500">No assessments found.</div>
+            <div className="text-sm text-gray-500">No timeline events found.</div>
           ) : (
             <ul className="space-y-3">
-              {sorted.map((r: any) => (
-                <li key={r.id} className="p-3 border rounded">
+              {sorted.map((e: any) => (
+                <li key={e.id} className="p-3 border rounded">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-medium">{new Date(r.created_at || r.started_at || r.started_at).toLocaleString()}</div>
-                      <div className="text-xs text-gray-500">Session: {r.session_id ?? r.id}</div>
-                      <div className="text-sm mt-2">Summary: {r.summary ?? '—'}</div>
+                      <div className="font-medium">{new Date(e.time || e.payload?.created_at || e.payload?.started_at || Date.now()).toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">{e.type.toUpperCase()}</div>
+                      <div className="text-sm mt-2">{e.title}: {e.summary ?? '—'}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm">Status: {r.status ?? 'processed'}</div>
+                      <div className="text-sm">Type: {e.type}</div>
                       <div className="mt-2">
-                        <Link to={`/report/${r.session_id || r.id}`} className="text-indigo-600">View report</Link>
+                        {e.type === 'report' && <Link to={`/report/${e.payload?.session_id || e.payload?.id}`} className="text-indigo-600">View report</Link>}
+                        {e.type === 'assessment' && <Link to={`/assessments/${e.payload?.id}`} className="text-indigo-600">Open assessment</Link>}
+                        {e.type === 'lab' && <span className="text-indigo-600">Lab: {e.payload?.test_name}</span>}
+                        {e.type === 'profile' && <Link to={`/profile`} className="text-indigo-600">View profile</Link>}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 text-sm text-gray-700">
-                    <strong>Body Systems:</strong>
-                    <div className="mt-1">
-                      {r.body_systems && r.body_systems.length > 0 ? (
-                        r.body_systems.map((b: any) => (
+                  {e.type === 'report' && e.payload?.body_systems && (
+                    <div className="mt-3 text-sm text-gray-700">
+                      <strong>Body Systems:</strong>
+                      <div className="mt-1">
+                        {e.payload.body_systems.map((b: any) => (
                           <div key={b.id} className="text-xs">{b.body_system_id ?? 'Unknown'} — {b.category}</div>
-                        ))
-                      ) : (
-                        <div className="text-xs text-gray-400">No body system data</div>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </li>
               ))}
             </ul>

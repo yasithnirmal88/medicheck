@@ -210,3 +210,44 @@ export const SeverityThresholdsListPage = makeListPage<SeverityThreshold>('sever
   { key: 'status', header: 'Status', render: (st) => statusCell(st.status) },
   { key: 'created_at', header: 'Created', render: (st) => dateCell(st.created_at) },
 ])
+
+// ---- Category & Master Data List Pages ----
+export const DiseaseCategoriesListPage = makeListPage<any>('disease_category', 'Disease Categories', 'Disease categories used for classification', [
+  { key: 'code', header: 'Code', render: (d) => codeCell(d.code) },
+  { key: 'name', header: 'Name', render: (d) => nameCell(d.name) },
+  { key: 'description', header: 'Description', render: (d) => textCell(d.description || '') },
+  { key: 'status', header: 'Status', render: (d) => statusCell(d.status) },
+  { key: 'created_at', header: 'Created', render: (d) => dateCell(d.created_at) },
+])
+
+export const BodySystemCategoriesListPage = makeListPage<any>('body_system_category', 'Body System Categories', 'Categories grouping body systems', [
+  { key: 'code', header: 'Code', render: (b) => codeCell(b.code) },
+  { key: 'name', header: 'Name', render: (b) => nameCell(b.name) },
+  { key: 'description', header: 'Description', render: (b) => textCell(b.description || '') },
+  { key: 'status', header: 'Status', render: (b) => statusCell(b.status) },
+  { key: 'created_at', header: 'Created', render: (b) => dateCell(b.created_at) },
+])
+
+export const RecommendationCategoriesListPage = makeListPage<any>('recommendation_category', 'Recommendation Categories', 'Categories for recommendations and guidance', [
+  { key: 'code', header: 'Code', render: (r) => codeCell(r.code) },
+  { key: 'name', header: 'Name', render: (r) => nameCell(r.name) },
+  { key: 'description', header: 'Description', render: (r) => textCell(r.description || '') },
+  { key: 'status', header: 'Status', render: (r) => statusCell(r.status) },
+  { key: 'created_at', header: 'Created', render: (r) => dateCell(r.created_at) },
+])
+
+export const QuestionCategoriesListPage = makeListPage<any>('question_category', 'Question Categories', 'Categories for grouping questions', [
+  { key: 'code', header: 'Code', render: (q) => codeCell(q.code) },
+  { key: 'name', header: 'Name', render: (q) => nameCell(q.name) },
+  { key: 'description', header: 'Description', render: (q) => textCell(q.description || '') },
+  { key: 'status', header: 'Status', render: (q) => statusCell(q.status) },
+  { key: 'created_at', header: 'Created', render: (q) => dateCell(q.created_at) },
+])
+
+export const QuestionTagsListPage = makeListPage<any>('question_tag', 'Question Tags', 'Tags used for questions', [
+  { key: 'code', header: 'Code', render: (t) => codeCell(t.code) },
+  { key: 'name', header: 'Name', render: (t) => nameCell(t.name) },
+  { key: 'color_hex', header: 'Color', render: (t) => t.color_hex ? <span className="w-4 h-4 rounded-full" style={{ backgroundColor: t.color_hex }} /> : <span className="text-xs text-slate-400">—</span> },
+  { key: 'status', header: 'Status', render: (t) => statusCell(t.status) },
+  { key: 'created_at', header: 'Created', render: (t) => dateCell(t.created_at) },
+])
