@@ -19,7 +19,7 @@ function isObject(v: unknown) {
   return v !== null && typeof v === 'object' && !Array.isArray(v)
 }
 
-function findIdKey(obj: any): string | null {
+export function findIdKey(obj: any): string | null {
   // Accept both objects and arrays (we'll examine elements for id-like keys)
   if (!obj) return null
   const idKeys = ['id', 'uuid', 'code', 'slug', 'key']
@@ -44,7 +44,7 @@ function findIdKey(obj: any): string | null {
   return null
 }
 
-function arrayDiffById(cur: any[] = [], prev: any[] = []) {
+export function arrayDiffById(cur: any[] = [], prev: any[] = []) {
   const idKey = findIdKey(cur.length ? cur : prev.length ? prev : null)
 
   if (idKey) {
