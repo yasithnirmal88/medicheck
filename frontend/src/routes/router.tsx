@@ -54,6 +54,12 @@ const ClinicalGuidelinesListPage = React.lazy(() => import('../features/cms/page
 const DecisionRulesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DecisionRulesListPage })))
 const SeverityThresholdsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.SeverityThresholdsListPage })))
 
+const DiseaseCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.DiseaseCategoriesListPage })))
+const BodySystemCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.BodySystemCategoriesListPage })))
+const RecommendationCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.RecommendationCategoriesListPage })))
+const QuestionCategoriesListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionCategoriesListPage })))
+const QuestionTagsListPage = React.lazy(() => import('../features/cms/pages/ContentListPages').then(m => ({ default: m.QuestionTagsListPage })))
+
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, loading } = useAuth()
   if (loading) return <LoadingPage />
@@ -128,6 +134,11 @@ export default function Router() {
           <Route path="guidelines" element={<ClinicalGuidelinesListPage />} />
           <Route path="rules" element={<DecisionRulesListPage />} />
           <Route path="thresholds" element={<SeverityThresholdsListPage />} />
+          <Route path="disease-categories" element={<DiseaseCategoriesListPage />} />
+          <Route path="body-system-categories" element={<BodySystemCategoriesListPage />} />
+          <Route path="recommendation-categories" element={<RecommendationCategoriesListPage />} />
+          <Route path="question-categories" element={<QuestionCategoriesListPage />} />
+          <Route path="question-tags" element={<QuestionTagsListPage />} />
           <Route path=":entitySlug/new" element={<ContentFormPage />} />
           <Route path=":entitySlug/:id" element={<ContentFormPage />} />
 
