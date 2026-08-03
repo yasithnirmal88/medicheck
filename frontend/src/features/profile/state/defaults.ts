@@ -168,15 +168,15 @@ export function createDefaultState(): WizardState {
 }
 
 export function mergeDraft(base: WizardState, draft: Partial<WizardState>): WizardState {
-  const merged: WizardState = { ...base }
+  const merged: Record<string, unknown> = { ...base }
   const keys = Object.keys(base) as (keyof WizardState)[]
   for (const key of keys) {
     const value = draft[key]
     if (value === undefined || value === null) continue
     if (typeof value === 'object' && !Array.isArray(value)) {
-      merged[key] = { ...(base[key] as object), ...(value as object) } as WizardState[typeof key]
+      merged[key as string] = { ...(base[key] as object), ...(value as object) }
     } else {
-      merged[key] = value
+      merged[key as string] = value
     }
   }
   return merged

@@ -81,7 +81,7 @@ export const Field: React.FC<{ spec: FieldSpec; bag: FieldBag; className?: strin
         return (
           <div className="relative">
             <select
-              {...register(spec.name)}
+              {...asElement<HTMLSelectElement>(register(spec.name))}
               className={cn(inputBase, common, 'pr-8')}
               aria-invalid={hasError}
             >
@@ -143,7 +143,7 @@ export const Field: React.FC<{ spec: FieldSpec; bag: FieldBag; className?: strin
       case 'textarea':
         return (
           <textarea
-            {...register(spec.name)}
+            {...asElement<HTMLTextAreaElement>(register(spec.name))}
             rows={spec.rows ?? 3}
             className={cn(inputBase, common)}
             placeholder={spec.placeholder}
