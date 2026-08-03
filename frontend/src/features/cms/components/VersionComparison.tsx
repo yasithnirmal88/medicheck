@@ -173,7 +173,7 @@ export function VersionComparison({
                   (() => {
                     const curArr = Array.isArray(it.current) ? it.current : []
                     const prevArr = Array.isArray(it.previous) ? it.previous : []
-                    const { added, removed, common, idKey } = arrayDiffById(curArr as any[], prevArr as any[])
+                    const { added, removed, common, modified, idKey } = arrayDiffById(curArr as any[], prevArr as any[])
                     return (
                       <div className="grid gap-3 md:grid-cols-2">
                         <div>
@@ -183,7 +183,29 @@ export function VersionComparison({
                             {added.map((a, i) => (
                               <div key={i} className="text-sm text-emerald-700">• {idKey ? String((a as any)[idKey]) + ' — ' + ((a as any).name ?? (a as any).title ?? '') : String(a)}</div>
                             ))}
-                            {!added.length && !removed.length && (curArr.map((c, i) => (
+
+                            {modified.length ? <div className="text-sm text-amber-600 mt-2">Modified:</div> : null}
+                            {modified.map((m: any) => (
+                              <div key={String(m.id)} className="text-sm">
+                                • {idKey ? String(m.id) + ' — ' + ((m.current as any).name ?? (m.current as any).title ?? '') : 'item'} — <small className="text-slate-500">modified</small>
+                                <div className="mt-1 ml-4 text-xs space-y-1">
+                                  {Object.keys(m.previous || {}).map((k) => {
+                                    const prevVal = (m.previous || {})[k]
+                                    const curVal = (m.current || {})[k]
+                                    if (JSON.stringify(prevVal) === JSON.stringify(curVal)) return null
+                                    return (
+                                      <div key={k} className="flex gap-2 items-baseline">
+                                        <div className="text-rose-600 w-32">{k}:</div>
+                                        <div className="text-rose-600 line-through mr-2">{String(prevVal ?? '—')}</div>
+                                        <div className="text-emerald-700">{String(curVal ?? '—')}</div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+
+                            {!added.length && !removed.length && !modified.length && (curArr.map((c, i) => (
                               <div key={i} className="text-sm">• {idKey ? String((c as any)[idKey]) + ' — ' + ((c as any).name ?? (c as any).title ?? '') : String(c)}</div>
                             )))}
                           </div>
@@ -195,7 +217,29 @@ export function VersionComparison({
                             {removed.map((r, i) => (
                               <div key={i} className="text-sm text-rose-600">• {idKey ? String((r as any)[idKey]) + ' — ' + ((r as any).name ?? (r as any).title ?? '') : String(r)}</div>
                             ))}
-                            {!added.length && !removed.length && (prevArr.map((p, i) => (
+
+                            {modified.length ? <div className="text-sm text-amber-600 mt-2">Modified:</div> : null}
+                            {modified.map((m: any) => (
+                              <div key={String(m.id)} className="text-sm">
+                                • {idKey ? String(m.id) + ' — ' + ((m.previous as any).name ?? (m.previous as any).title ?? '') : 'item'} — <small className="text-slate-500">modified</small>
+                                <div className="mt-1 ml-4 text-xs space-y-1">
+                                  {Object.keys(m.previous || {}).map((k) => {
+                                    const prevVal = (m.previous || {})[k]
+                                    const curVal = (m.current || {})[k]
+                                    if (JSON.stringify(prevVal) === JSON.stringify(curVal)) return null
+                                    return (
+                                      <div key={k} className="flex gap-2 items-baseline">
+                                        <div className="text-rose-600 w-32">{k}:</div>
+                                        <div className="text-rose-600 line-through mr-2">{String(prevVal ?? '—')}</div>
+                                        <div className="text-emerald-700">{String(curVal ?? '—')}</div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+
+                            {!added.length && !removed.length && !modified.length && (prevArr.map((p, i) => (
                               <div key={i} className="text-sm">• {idKey ? String((p as any)[idKey]) + ' — ' + ((p as any).name ?? (p as any).title ?? '') : String(p)}</div>
                             )))}
                           </div>
