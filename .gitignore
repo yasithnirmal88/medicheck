@@ -1,4 +1,5 @@
 # Environment / Secrets
+.env
 .env.production
 .env.staging
 .env.local
@@ -30,6 +31,10 @@ Thumbs.db
 
 # Docker
 docker-data/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
 
 # Logs
 *.log
