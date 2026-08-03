@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Info, AlertTriangle } from 'lucide-react'
 import { useWizard } from '../state/WizardProvider'
 import { DashboardLayout } from '../../../layouts/DashboardLayout'
 import { Stepper } from '../components/wizard/Stepper'
@@ -14,8 +16,19 @@ import { DiseaseCardGrid } from '../components/wizard/DiseaseCardGrid'
 import { ExpandableFamilyCard } from '../components/wizard/ExpandableFamilyCard'
 import { ReviewSubmitPage } from '../components/wizard/ReviewSubmitPage'
 import { HealthTips } from '../components/wizard/HealthTips'
+import { ProfileErrorBoundary } from '../components/ProfileErrorBoundary'
+import { ProfileSkeleton } from '../components/ProfileSkeleton'
+import { AutoSaveIndicator } from '../components/AutoSaveIndicator'
+import { ProfileCompletion } from '../components/ProfileCompletion'
+import { AIReadinessScore } from '../components/AIReadinessScore'
+import { useAutoSave } from '../hooks/useAutoSave'
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges'
+import { useProfileCompletion } from '../hooks/useProfileCompletion'
+import { useAIReadiness } from '../hooks/useAIReadiness'
+import { useHealthTips } from '../hooks/useHealthTips'
+import { useToast } from '../hooks/useToast'
+import { useValidation } from '../hooks/useValidation'
 import type { WizardState, SectionKey } from '../types/wizard'
-import { createDefaultState } from '../state/defaults'
 import { fieldSpecs } from '../wizard/fieldSpecs'
 import { sectionSchemas } from '../wizard/schemas'
 
@@ -66,7 +79,6 @@ function renderSection(
         setSection={setSection}
         onSubmit={() => {
           console.log('Profile submitted:', state)
-          alert('Profile submitted successfully!')
         }}
       />
     )
@@ -402,8 +414,17 @@ function renderSection(
 }
 
 export default function HealthProfilePage() {
-  const { state, setSection, isHydrated, saveDraft } = useWizard()
+  const { state, setSection, isHydrated, saveDraft, hasUnsavedChanges, autoSaveStatus, lastSavedAt } = useWizard()
   const [currentStep, setCurrentStep] = React.useState(0)
+  const [showCompletion, setShowCompletion] = useState(false)
+  const [showAIReadiness, setShowAIReadiness] = useState(false)
+  const { success, error, info } = useToast()
+  const { validateSection } = useValidation()
+  const completion = useProfileCompletion(state)
+  const aiReadiness = useAIReadiness(state)
+  const healthTips = useHealthTips(state)
+  useAutoSave(true)
+  useUnsavedChanges(hasUnsavedChanges)
 
   const steps = useMemo(() => VISIBLE_STEPS(state), [state])
 
@@ -411,12 +432,26 @@ export default function HealthProfilePage() {
 
   const handleSave = () => {
     saveDraft()
+    success('Draft saved successfully')
   }
 
-  const handleSubmit = () => {
-    // In a real app, this would call the API to save the profile
-    console.log('Submitting profile:', state)
-    alert('Profile submitted successfully!')
+  const handleSubmit = async () => {
+    const validation = validateSection('consents', state.consents)
+    if (!validation.isValid) {
+      error('Please review and accept the terms and conditions')
+      return
+    }
+    try {
+      const response = await fetch('/api/profiles/me', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      })
+      if (!response.ok) throw new Error('Failed to submit')
+      success('Profile submitted successfully!')
+    } catch {
+      error('Failed to submit profile. Please try again.')
+    }
   }
 
   if (!isHydrated) {
@@ -432,55 +467,129 @@ export default function HealthProfilePage() {
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-4xl">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Health Profile</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Complete your health profile — your data is saved automatically</p>
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Health Profile</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Complete your health profile — your data is saved automatically</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <AutoSaveIndicator status={autoSaveStatus} lastSaved={lastSavedAt ?? undefined} />
+            <button
+              type="button"
+              onClick={() => setShowCompletion(!showCompletion)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              aria-expanded={showCompletion}
+              aria-controls="completion-panel"
+            >
+              {showCompletion ? 'Hide' : 'Show'} Completion
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAIReadiness(!showAIReadiness)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              aria-expanded={showAIReadiness}
+              aria-controls="ai-readiness-panel"
+            >
+              {showAIReadiness ? 'Hide' : 'Show'} AI Readiness
+            </button>
+          </div>
         </div>
+
+        <AnimatePresence>
+          {showCompletion && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              id="completion-panel"
+              className="mb-4 overflow-hidden"
+            >
+              <ProfileCompletion state={state} onSectionClick={(key) => {
+                const idx = steps.findIndex((s) => s.key === key)
+                if (idx >= 0) setCurrentStep(idx)
+              }} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showAIReadiness && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              id="ai-readiness-panel"
+              className="mb-4 overflow-hidden"
+            >
+              <AIReadinessScore state={state} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {healthTips.length > 0 && (
+          <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800/50 dark:bg-blue-900/20">
+            <h3 className="mb-2 text-sm font-semibold text-blue-800 dark:text-blue-200 flex items-center gap-2">
+              <Info className="h-4 w-4" /> Health Insights
+            </h3>
+            <ul className="space-y-1">
+              {healthTips.slice(0, 5).map((tip, i) => (
+                <li key={i} className="text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                  <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  {tip.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <Stepper steps={steps} currentStep={currentStep} onStepClick={setCurrentStep} />
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          {renderSection(steps[currentStep], state, setSection)}
-        </div>
+        <ProfileErrorBoundary>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            {renderSection(steps[currentStep], state, setSection)}
+          </div>
+        </ProfileErrorBoundary>
 
         {currentKey !== 'consents' && (
-        <div className="mt-6 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
-            disabled={currentStep === 0}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            Previous
-          </button>
-          <div className="flex items-center gap-3">
+          <div className="mt-6 flex items-center justify-between">
             <button
               type="button"
-              onClick={handleSave}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+              disabled={currentStep === 0}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-40 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             >
-              Save Draft
+              Previous
             </button>
-            {currentStep === steps.length - 1 ? (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={handleSubmit}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                onClick={handleSave}
+                className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               >
-                Submit Profile
+                Save Draft
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1))}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-              >
-                Next
-              </button>
-            )}
+              {currentStep === steps.length - 1 ? (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  Submit Profile
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep((prev) => Math.min(steps.length - 1, prev + 1))}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </DashboardLayout>
   )

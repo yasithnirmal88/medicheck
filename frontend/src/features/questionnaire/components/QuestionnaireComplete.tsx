@@ -3,7 +3,7 @@ import Button from '@/shared/ui/Button'
 import Card from '@/shared/ui/Card'
 import type { AssessmentSession } from '../types'
 
-interface QuestionnaireCompleteProps {
+type CompleteProps = React.ComponentProps<'div'> & {
   session: AssessmentSession
   score?: { total: number; max: number; label?: string } | null
   onReturnToDashboard: () => void

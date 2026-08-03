@@ -4,6 +4,8 @@ import type { WizardState, SectionKey } from '../types/wizard'
 import { createDefaultState, mergeDraft } from './defaults'
 
 const STORAGE_KEY = 'medicheck-profile-draft-v1'
+const VERSIONS_KEY = 'medicheck-profile-versions'
+const AUTO_SAVE_INTERVAL = 5000
 
 interface WizardContextValue {
   state: WizardState
@@ -12,6 +14,11 @@ interface WizardContextValue {
   clearDraft: () => void
   isHydrated: boolean
   saveVersion: () => void
+  autoSaveStatus: 'idle' | 'saving' | 'saved' | 'error'
+  lastSavedAt: Date | null
+  hasUnsavedChanges: boolean
+  resumeFromDraft: () => boolean
+  resetDraft: () => void
 }
 
 const WizardContext = createContext<WizardContextValue | null>(null)
@@ -25,11 +32,25 @@ function readDraft(): Partial<WizardState> | null {
   }
 }
 
+function readVersions(): { savedAt: string; state: WizardState }[] {
+  try {
+    return JSON.parse(localStorage.getItem(VERSIONS_KEY) ?? '[]') as {
+      savedAt: string
+      state: WizardState
+    }[]
+  } catch {
+    return []
+  }
+}
+
 export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isHydrated, setIsHydrated] = useState(false)
   const [state, setState] = useState<WizardState>(createDefaultState)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const stateRef = useRef(state)
   stateRef.current = state
+  const lastSavedRef = useRef<WizardState | null>(null)
 
   useEffect(() => {
     const draft = readDraft()
@@ -40,8 +61,11 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const persist = useCallback(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateRef.current))
+      setAutoSaveStatus('saved')
+      setLastSavedAt(new Date())
+      lastSavedRef.current = stateRef.current
     } catch {
-      // ignore storage quota errors
+      setAutoSaveStatus('error')
     }
   }, [])
 
@@ -51,8 +75,26 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isHydrated) autoPersist()
   }, [state, isHydrated, autoPersist])
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isHydrated && stateRef.current !== lastSavedRef.current) {
+        persist()
+      }
+    }, AUTO_SAVE_INTERVAL)
+    return () => clearInterval(interval)
+  }, [isHydrated, persist])
+
+  useEffect(() => {
+    const handler = () => {
+      persist()
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [persist])
+
   const setSection = useCallback((key: SectionKey, value: unknown) => {
     setState((prev) => ({ ...prev, [key]: value as never }))
+    setAutoSaveStatus('saving')
   }, [])
 
   const saveDraft = useCallback(() => {
@@ -69,31 +111,53 @@ export const WizardProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const saveVersion = useCallback(() => {
     try {
-      const versions = readDraftVersions()
+      const versions = readVersions()
       versions.push({ savedAt: new Date().toISOString(), state: stateRef.current })
-      localStorage.setItem('medicheck-profile-versions', JSON.stringify(versions.slice(-10)))
+      localStorage.setItem(VERSIONS_KEY, JSON.stringify(versions.slice(-10)))
     } catch {
       // ignore storage errors
     }
   }, [])
 
+  const hasUnsavedChanges = useMemo(() => {
+    if (!lastSavedRef.current) return true
+    return JSON.stringify(state) !== JSON.stringify(lastSavedRef.current)
+  }, [state])
+
+  const resumeFromDraft = useCallback((): boolean => {
+    const draft = readDraft()
+    if (draft) {
+      setState((prev) => mergeDraft(prev, draft))
+      return true
+    }
+    return false
+  }, [])
+
+  const resetDraft = useCallback(() => {
+    clearDraft()
+    setState(createDefaultState())
+    lastSavedRef.current = null
+    setAutoSaveStatus('idle')
+  }, [clearDraft])
+
   const value = useMemo<WizardContextValue>(
-    () => ({ state, setSection, saveDraft, clearDraft, isHydrated, saveVersion }),
-    [state, setSection, saveDraft, clearDraft, isHydrated, saveVersion],
+    () => ({
+      state,
+      setSection,
+      saveDraft,
+      clearDraft,
+      isHydrated,
+      saveVersion,
+      autoSaveStatus,
+      lastSavedAt,
+      hasUnsavedChanges,
+      resumeFromDraft,
+      resetDraft,
+    }),
+    [state, setSection, saveDraft, clearDraft, isHydrated, saveVersion, autoSaveStatus, lastSavedAt, hasUnsavedChanges, resumeFromDraft, resetDraft],
   )
 
   return <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
-}
-
-function readDraftVersions(): { savedAt: string; state: WizardState }[] {
-  try {
-    return JSON.parse(localStorage.getItem('medicheck-profile-versions') ?? '[]') as {
-      savedAt: string
-      state: WizardState
-    }[]
-  } catch {
-    return []
-  }
 }
 
 export const useWizard = (): WizardContextValue => {

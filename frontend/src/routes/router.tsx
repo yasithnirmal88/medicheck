@@ -18,6 +18,7 @@ const ReportViewer = React.lazy(() => import('../features/dashboard/pages/Report
 const ResultsDashboard = React.lazy(() => import('../features/dashboard/pages/ResultsDashboard'))
 const BodySystemDashboard = React.lazy(() => import('../features/dashboard/pages/BodySystemDashboard'))
 const RecommendationCenter = React.lazy(() => import('../features/dashboard/pages/RecommendationCenter'))
+const AssessmentsPage = React.lazy(() => import('../features/dashboard/pages/Assessments'))
 const TimelinePage = React.lazy(() => import('../features/health-timeline/pages/TimelinePage'))
 const ComparePage = React.lazy(() => import('../features/health-timeline/pages/ComparePage'))
 const ProfileWizard = React.lazy(() => import('../features/profile/pages/ProfileWizard'))
@@ -98,6 +99,7 @@ export default function Router() {
         <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
         <Route path="/dashboard" element={<RequireAuth><PatientDashboard /></RequireAuth>} />
         <Route path="/assessments" element={<RequireAuth><AssessmentHistory /></RequireAuth>} />
+        <Route path="/assessments/dashboard" element={<RequireAuth><AssessmentsPage /></RequireAuth>} />
         <Route path="/assessments/:id/results" element={<RequireAuth><ResultsDashboard /></RequireAuth>} />
         <Route path="/assessments/:id" element={<RequireAuth><ReportViewer /></RequireAuth>} />
         <Route path="/report/:id" element={<RequireAuth><ReportViewer /></RequireAuth>} />

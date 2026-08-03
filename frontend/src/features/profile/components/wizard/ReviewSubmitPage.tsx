@@ -30,8 +30,8 @@ import {
   CheckCircle as SubmitIcon,
   Loader,
 } from 'lucide-react'
-import type { WizardState, SectionKey } from '../../types/wizard'
-import { fieldSpecs } from '../../wizard/fieldSpecs'
+import type { WizardState, SectionKey } from '@/features/profile/types/wizard'
+import { fieldSpecs } from '@/features/profile/wizard/fieldSpecs'
 import { Switch } from './Switch'
 import { cn } from '@/lib/utils'
 
@@ -66,7 +66,7 @@ function getSectionCompletion(key: SectionKey, state: WizardState): { filled: nu
     const count = value.length
     return count > 0 ? { filled: count, total: count, missing: [] } : { filled: 0, total: 0, missing: [] }
   }
-  const record = (value ?? {}) as unknown as Record<string, unknown>
+  const record = (value as unknown as Record<string, unknown>) ?? {}
   let filled = 0
   let total = 0
   const missing: string[] = []

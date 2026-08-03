@@ -1,8 +1,8 @@
 import React from 'react'
 import { Field } from './FieldControl'
 import type { FieldSpec } from './FieldControl'
-import type { SectionKey } from '../../types/wizard'
-import { fieldSpecs } from '../../wizard/fieldSpecs'
+import type { SectionKey } from '@/features/profile/types/wizard'
+import { fieldSpecs } from '@/features/profile/wizard/fieldSpecs'
 
 interface SectionFormProps<T = unknown> {
   sectionKey: SectionKey
