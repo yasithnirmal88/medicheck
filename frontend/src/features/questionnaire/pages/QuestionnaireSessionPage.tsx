@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { AlertCircle, ClipboardList } from 'lucide-react'
 import AppLayout from '@/layouts/AppLayout'
@@ -6,7 +6,7 @@ import Card from '@/shared/ui/Card'
 import Skeleton from '@/shared/ui/Skeleton'
 import Button from '@/shared/ui/Button'
 import QuestionnaireHeader from '../components/QuestionnaireHeader'
-import QuestionnaireAIAssistant from '../components/ai/QuestionnaireAIAssistant'
+import QuestionnaireSidebar from '../components/QuestionnaireSidebar'
 import QuestionnaireComplete from '../components/QuestionnaireComplete'
 import ReviewScreen from '../components/ReviewScreen'
 import QuestionRenderer from '../components/QuestionRenderer'
@@ -19,6 +19,8 @@ const QuestionnaireSessionPage: React.FC = () => {
   const navigate = useNavigate()
 
   const [phase, setPhase] = useState<Phase>('question')
+  const [localError, setLocalError] = useState<string | undefined>()
+  const [reviewAnswers, setReviewAnswers] = useState<Record<string, unknown>>({})
 
   const {
     session,
@@ -36,25 +38,22 @@ const QuestionnaireSessionPage: React.FC = () => {
     error: sessionError,
     saveStatus,
     isSaving,
-    completed,
-    pause,
-    resume,
+    completeMutation,
     submitAnswer,
     next,
     skip,
     goBack,
     recoverDraft,
-    completeMutation,
+    pause,
+    resume,
   } = useQuestionnaireFlow(sessionId)
 
-  const [localError, setLocalError] = React.useState<string | undefined>()
-
   // Recover any local draft on mount.
-  React.useEffect(() => {
+  useEffect(() => {
     if (sessionId) recoverDraft()
   }, [sessionId, recoverDraft])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (sessionError) {
       setLocalError('An error occurred loading the session. Please try again.')
     }
@@ -79,6 +78,7 @@ const QuestionnaireSessionPage: React.FC = () => {
       }
     }
     if (isLast) {
+      setReviewAnswers({ ...answers })
       setPhase('review')
       return
     }
@@ -102,10 +102,15 @@ const QuestionnaireSessionPage: React.FC = () => {
     })
   }, [sessionId, completeMutation])
 
+  const handleResume = useCallback(() => {
+    resume()
+    setLocalError(undefined)
+  }, [resume])
+
   const handleReturnToDashboard = () => navigate('/')
   const handleBackToAssessments = () => navigate('/questionnaires')
   const handleExit = () => {
-    if (window.confirm('Exit the assessment? Your progress has been saved.')) {
+    if (window.confirm('Exit the assessment? Your progress has been saved automatically.')) {
       navigate('/questionnaires')
     }
   }
@@ -159,7 +164,7 @@ const QuestionnaireSessionPage: React.FC = () => {
           <Card>
             <ReviewScreen
               questions={currentQuestion ? [currentQuestion] : []}
-              answers={answers}
+              answers={reviewAnswers}
               onEdit={() => setPhase('question')}
               onSubmit={handleSubmitReview}
             />
@@ -169,7 +174,7 @@ const QuestionnaireSessionPage: React.FC = () => {
     )
   }
 
-  const pct = progress?.completion_percentage ?? 0
+  const completionPercentage = progress?.completion_percentage ?? 0
 
   return (
     <AppLayout>
@@ -192,11 +197,15 @@ const QuestionnaireSessionPage: React.FC = () => {
               onSaveDraft={() => {}}
             />
 
-            {/* Progress bar (top-level, full width) */}
-            <Skeleton className="h-2 w-full" />
-
             {/* Question card */}
-            <Card className="min-h-[220px]">
+            <Card className="min-h-[260px]">
+              {session.status === 'paused' && (
+                <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-center dark:border-yellow-900/50 dark:bg-yellow-900/20">
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Assessment is paused</p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300">Your progress is saved. Click Resume to continue.</p>
+                </div>
+              )}
+
               {currentQuestion ? (
                 <div className="space-y-4">
                   <div>
@@ -222,12 +231,7 @@ const QuestionnaireSessionPage: React.FC = () => {
                     <ClipboardList className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <p className="text-gray-500 dark:text-gray-300">No more questions</p>
-                  <Button
-                    variant="primary"
-                    onClick={() => setPhase('review')}
-                    disabled={isSubmitting}
-                    className="min-h-[44px]"
-                  >
+                  <Button variant="primary" onClick={() => setPhase('review')} disabled={isSubmitting} className="mt-2 min-h-[44px]">
                     Review &amp; Submit
                   </Button>
                 </div>
@@ -252,9 +256,22 @@ const QuestionnaireSessionPage: React.FC = () => {
                 >
                   Skip
                 </Button>
-                <Button variant="primary" onClick={handleNext} disabled={!canGoNext || isSubmitting} className="min-h-[44px]">
-                  {isLast ? 'Review' : 'Next'}
-                </Button>
+                {session.status === 'paused' ? (
+                  <Button variant="primary" onClick={handleResume} disabled={isSubmitting} className="min-h-[44px]">
+                    Resume
+                  </Button>
+                ) : isLast ? (
+                  <Button variant="primary" onClick={() => {
+                    setReviewAnswers({ ...answers })
+                    setPhase('review')
+                  }} disabled={isSubmitting} className="min-h-[44px]">
+                    Review
+                  </Button>
+                ) : (
+                  <Button variant="primary" onClick={handleNext} disabled={!canGoNext || isSubmitting} className="min-h-[44px]">
+                    Next
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -266,9 +283,16 @@ const QuestionnaireSessionPage: React.FC = () => {
             )}
           </div>
 
-          {/* AI Assistant panel */}
-          <div className="w-full max-w-xs xl:w-80">
-            <QuestionnaireAIAssistant />
+          {/* Right sidebar: why matters, explanation, tips, body system, progress, confidence, AI chat */}
+          <div className="w-full xl:w-80">
+            <QuestionnaireSidebar
+              question={currentQuestion}
+              answered={answered}
+              totalQuestions={totalQuestions}
+              completionPercentage={completionPercentage}
+              saveStatus={saveStatus}
+              isSaving={isSaving}
+            />
           </div>
         </div>
       </div>
