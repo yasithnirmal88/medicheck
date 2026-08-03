@@ -48,10 +48,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             # Content Security Policy
             directive = settings.csp_report_only
             csp_key = "Content-Security-Policy-Report-Only" if directive else "Content-Security-Policy"
+
+            swagger_sources = (
+                " https://cdn.jsdelivr.net"
+                if settings.is_development
+                else ""
+            )
+
             response.headers[csp_key] = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' https://apis.google.com https://www.gstatic.com; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                f"script-src 'self' 'unsafe-inline' https://apis.google.com https://www.gstatic.com{swagger_sources}; "
+                f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{swagger_sources}; "
                 "img-src 'self' data: blob: https:; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; "

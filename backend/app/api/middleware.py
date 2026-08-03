@@ -105,8 +105,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             )
             csp = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' https://apis.google.com https://www.gstatic.com; "
-                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "script-src 'self' 'unsafe-inline' https://apis.google.com https://www.gstatic.com"
+                + (" https://cdn.jsdelivr.net" if settings.is_development else "")
+                + "; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
+                + (" https://cdn.jsdelivr.net" if settings.is_development else "")
+                + "; "
                 "img-src 'self' data: blob: https:; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; "
