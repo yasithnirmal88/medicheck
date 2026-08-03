@@ -1,9 +1,10 @@
 /**
  * Reusable question-type input components.
  *
- * Each component follows the shared `QuestionInputProps<T>` shape (see ./types).
- * The aliases on the left are the canonical, domain-friendly names used by the
- * QuestionRenderer (`../QuestionRenderer`): map a `question_type` to a component.
+ * Every component follows the shared `QuestionInputProps<T>` shape (see ./types).
+ * The canonical domain names exported below are the friendly aliases the
+ * QuestionRenderer maps a `question_type` to. Original component names are
+ * re-exported too for consumers that prefer explicit imports.
  *
  * Do not build answer-handling logic here — these are pure UI inputs.
  */
@@ -24,34 +25,21 @@ import FileUploadInput from './FileUploadInput'
 
 export type { QuestionInputProps, QuestionInputComponent } from './types'
 
-// Single-select / radio
+// Friendly domain aliases (no name collisions with the originals).
 export const RadioInput = SingleChoice
-// Multi-select / checkbox
 export const CheckboxInput = MultipleChoice
-// Yes / No toggle
 export const YesNoInput = YesNo
-// Dropdown selector
 export const Dropdown = DropdownInput
-// Range slider
 export const Slider = SliderInput
-// Date picker
 export const DatePicker = DateInput
-// Time picker
 export const TimePicker = TimeInput
-// Numeric input
 export const NumberInput = NumericInput
-// Decimal / float input
-export const DecimalInput = DecimalInput
-// Text area
 export const TextArea = FreeTextInput
-// Multi-select chips
 export const MultiSelect = MultiSelectInput
-// Search / lookup
 export const Search = SearchInput
-// File upload
 export const FileUpload = FileUploadInput
 
-// Also re-export the originals for consumers that prefer explicit names.
+// Original component names for explicit consumers.
 export {
   SingleChoice,
   MultipleChoice,

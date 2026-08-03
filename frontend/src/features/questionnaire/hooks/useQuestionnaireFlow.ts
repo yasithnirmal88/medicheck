@@ -104,7 +104,10 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
     [currentQuestion, sessionId, saveMutation, qc],
   )
 
-  const next = useCallback(() => submitAnswer(answers[currentQuestion?.id]?.value ?? null), [submitAnswer, answers, currentQuestion])
+  const next = useCallback(() => {
+    if (!currentQuestion) return
+    submitAnswer(answers[currentQuestion.id]?.value ?? null)
+  }, [submitAnswer, answers, currentQuestion])
 
   // Skip: record a skipped marker and advance via the same branching path.
   const skip = useCallback(
@@ -174,7 +177,7 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
     // server state helpers
     saveStatus,
     isSaving: saveMutation.isPending,
-    completed: progress?.completion_percentage >= 100,
+    completed: (progress?.completion_percentage ?? 0) >= 100,
     // session lifecycle
     pause,
     resume,

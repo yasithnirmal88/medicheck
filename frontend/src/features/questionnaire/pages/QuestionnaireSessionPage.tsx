@@ -221,9 +221,7 @@ const QuestionnaireSessionPage: React.FC = () => {
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400 dark:bg-gray-800">
                     <ClipboardList className="h-6 w-6" aria-hidden="true" />
                   </span>
-                  <p className="text-gray-500 dark:text-gray-300">
-                    {phase === 'review' ? 'Review your answers' : 'No more questions'}
-                  </p>
+                  <p className="text-gray-500 dark:text-gray-300">No more questions</p>
                   <Button
                     variant="primary"
                     onClick={() => setPhase('review')}
