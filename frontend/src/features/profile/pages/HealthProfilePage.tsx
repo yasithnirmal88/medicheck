@@ -9,6 +9,8 @@ import { PhotoUpload } from '../components/wizard/PhotoUpload'
 import { MedicationCard } from '../components/wizard/MedicationCard'
 import { AllergyCard } from '../components/wizard/AllergyCard'
 import { VaccinationSection } from '../components/wizard/VaccinationSection'
+import { WomenHealthSection } from '../components/wizard/WomenHealthSection'
+import { MenHealthSection } from '../components/wizard/MenHealthSection'
 import { DiseaseCardGrid } from '../components/wizard/DiseaseCardGrid'
 import { ExpandableFamilyCard } from '../components/wizard/ExpandableFamilyCard'
 import { HealthTips } from '../components/wizard/HealthTips'
@@ -408,6 +410,42 @@ function renderSection(
       <div className="space-y-6">
         <SectionForm sectionKey={key} data={state.mental_health} onChange={(v) => setSection('mental_health', v)} />
         <HealthTips lifestyle={state.lifestyle} />
+      </div>
+    )
+  }
+
+  if (key === 'lifestyle_risks') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.lifestyle_risks} onChange={(v) => setSection('lifestyle_risks', v)} />
+        <HealthTips lifestyle={state.lifestyle} lifestyleRisks={state.lifestyle_risks} />
+      </div>
+    )
+  }
+
+  if (key === 'environment') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.environment} onChange={(v) => setSection('environment', v)} />
+        <HealthTips environment={state.environment} />
+      </div>
+    )
+  }
+
+  if (key === 'occupation') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.occupation} onChange={(v) => setSection('occupation', v)} />
+        <HealthTips occupation={state.occupation} />
+      </div>
+    )
+  }
+
+  if (key === 'travel') {
+    return (
+      <div className="space-y-6">
+        <SectionForm sectionKey={key} data={state.travel} onChange={(v) => setSection('travel', v)} />
+        <HealthTips travel={state.travel} />
       </div>
     )
   }

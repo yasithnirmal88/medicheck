@@ -35,17 +35,25 @@ interface HealthTipsProps {
   nutrition?: unknown
   medicalHistory?: unknown
   familyHistory?: unknown
+  lifestyleRisks?: unknown
+  environment?: unknown
+  occupation?: unknown
+  travel?: unknown
 }
 
-export function HealthTips({ lifestyle, nutrition, medicalHistory, familyHistory }: HealthTipsProps) {
+export function HealthTips({ lifestyle, nutrition, medicalHistory, familyHistory, lifestyleRisks, environment, occupation, travel }: HealthTipsProps) {
   const tips = React.useMemo<Tip[]>(() => {
     const result: Tip[] = []
-    if (!lifestyle && !nutrition && !medicalHistory && !familyHistory) return result
+    if (!lifestyle && !nutrition && !medicalHistory && !familyHistory && !lifestyleRisks && !environment && !occupation && !travel) return result
 
     const l = (lifestyle ?? {}) as Record<string, unknown>
     const n = (nutrition ?? {}) as Record<string, unknown>
     const mh = (medicalHistory ?? {}) as Record<string, unknown>
     const fh = (familyHistory ?? {}) as Record<string, unknown>
+    const lr = (lifestyleRisks ?? {}) as Record<string, unknown>
+    const env = (environment ?? {}) as Record<string, unknown>
+    const occ = (occupation ?? {}) as Record<string, unknown>
+    const trav = (travel ?? {}) as Record<string, unknown>
 
     if (l.smoking === 'current') {
       result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Current smoking significantly increases cardiovascular and respiratory risk. Consider a cessation plan.' })
@@ -169,8 +177,75 @@ export function HealthTips({ lifestyle, nutrition, medicalHistory, familyHistory
       result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `Low mood reported. Regular physical activity and social connection can help improve mood.` })
     }
 
+    if (lr.seatbelt_use === 'never') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Never wearing a seatbelt significantly increases injury risk in accidents. Always buckle up.' })
+    } else if (lr.seatbelt_use === 'sometimes') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'amber', text: 'Inconsistent seatbelt use — make it a habit to buckle up every time for safety.' })
+    }
+
+    if (lr.sun_exposure === 'high' || lr.sun_exposure === 'very_high') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'High sun exposure increases skin cancer risk. Use sunscreen (SPF 30+) and protective clothing.' })
+    }
+
+    if (lr.driving_habits === 'risky') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Risky driving habits detected. Consider defensive driving courses and always follow traffic laws.' })
+    }
+
+    if (lr.firearms === 'yes_unstored') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Unsecured firearms pose serious safety risks, especially in households with children. Store securely.' })
+    }
+
+    if (lr.substance_exposure === 'chemical' || lr.substance_exposure === 'biological' || lr.substance_exposure === 'radiation') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'Occupational substance exposure detected. Ensure proper protective equipment and follow safety protocols.' })
+    }
+
+    if (env.air_pollution === 'high') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'High air pollution exposure can affect respiratory and cardiovascular health. Consider indoor air purification.' })
+    }
+
+    if (env.mold_exposure === 'confirmed') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Confirmed mold exposure is a serious health risk. Address moisture issues and consider professional remediation.' })
+    } else if (env.mold_exposure === 'suspected') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'amber', text: 'Suspected mold exposure — consider testing and addressing moisture sources in your home.' })
+    }
+
+    if (env.chemical_exposure === 'industrial' || env.chemical_exposure === 'agricultural') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: 'Industrial or agricultural chemical exposure — ensure proper protective measures and regular health check-ups.' })
+    }
+
+    if (env.noise_pollution === 'high' || (typeof env.noise_pollution === 'number' && env.noise_pollution >= 7)) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: 'High noise pollution can impact hearing and stress levels. Consider noise-canceling solutions.' })
+    }
+
+    const workStress = Number(occ.work_stress) || 0
+    if (workStress >= 4) {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'amber', text: `High work stress (${workStress}/5). Chronic stress affects both mental and physical health — prioritize self-care.` })
+    }
+
+    if (occ.work_environment === 'hazardous') {
+      result.push({ icon: <AlertTriangle className="h-4 w-4" />, color: 'red', text: 'Hazardous work environment detected. Ensure all safety protocols are followed and use proper PPE.' })
+    }
+
+    if (occ.night_shifts === 'regular' || occ.night_shifts === 'rotating') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: 'Night shift work can disrupt circadian rhythm. Prioritize sleep hygiene and regular health monitoring.' })
+    }
+
+    if (occ.heavy_lifting === 'frequent' || occ.heavy_lifting === 'daily') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: 'Frequent heavy lifting — ensure proper technique and consider ergonomic adjustments to prevent injury.' })
+    }
+
+    if (occ.travel_frequency === 'frequent' || occ.travel_frequency === 'constant') {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: 'Frequent travel can disrupt sleep and diet patterns. Stay hydrated and maintain healthy routines on the road.' })
+    }
+
+    const countries = (trav.countries_visited as string) ?? ''
+    const tropical = (trav.tropical_regions as string) ?? ''
+    if (countries.length > 0 || tropical.length > 0) {
+      result.push({ icon: <Info className="h-4 w-4" />, color: 'blue', text: 'International travel history noted. Ensure vaccinations are up to date and monitor for travel-related illnesses.' })
+    }
+
     return result
-  }, [lifestyle, nutrition, medicalHistory, familyHistory])
+  }, [lifestyle, nutrition, medicalHistory, familyHistory, lifestyleRisks, environment, occupation, travel])
 
   if (tips.length === 0) {
     return (
