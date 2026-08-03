@@ -6,6 +6,9 @@ import { SectionForm } from '../components/wizard/SectionForm'
 import { RepeatableSection } from '../components/wizard/RepeatableSection'
 import { Switch } from '../components/wizard/Switch'
 import { PhotoUpload } from '../components/wizard/PhotoUpload'
+import { MedicationCard } from '../components/wizard/MedicationCard'
+import { AllergyCard } from '../components/wizard/AllergyCard'
+import { VaccinationSection } from '../components/wizard/VaccinationSection'
 import { DiseaseCardGrid } from '../components/wizard/DiseaseCardGrid'
 import { ExpandableFamilyCard } from '../components/wizard/ExpandableFamilyCard'
 import { HealthTips } from '../components/wizard/HealthTips'
@@ -208,35 +211,34 @@ function renderSection(
         renderItem: (item: unknown, index: number, onUpdate: (item: unknown) => void, onRemove: () => void) => {
           const entry = item as WizardState['medications'][number]
           return (
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <input placeholder="Medication" value={entry.medication} onChange={(e) => onUpdate({ ...entry, medication: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Dosage" value={entry.dosage ?? ''} onChange={(e) => onUpdate({ ...entry, dosage: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Frequency" value={entry.frequency ?? ''} onChange={(e) => onUpdate({ ...entry, frequency: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Reason" value={entry.reason ?? ''} onChange={(e) => onUpdate({ ...entry, reason: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <input placeholder="Start date" value={entry.start_date ?? ''} onChange={(e) => onUpdate({ ...entry, start_date: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Prescribing doctor" value={entry.prescribing_doctor ?? ''} onChange={(e) => onUpdate({ ...entry, prescribing_doctor: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-              </div>
-              <input placeholder="Current status" value={entry.current_status ?? ''} onChange={(e) => onUpdate({ ...entry, current_status: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-            </div>
+            <MedicationCard
+              medication={entry.medication}
+              dosage={entry.dosage ?? ''}
+              frequency={entry.frequency ?? ''}
+              reason={entry.reason ?? ''}
+              startDate={entry.start_date ?? ''}
+              prescribingDoctor={entry.prescribing_doctor ?? ''}
+              currentStatus={entry.current_status ?? ''}
+              onUpdate={(field: string, value: string) => onUpdate({ ...entry, [field]: value })}
+              onRemove={onRemove}
+            />
           )
         },
       },
       allergies: {
-        newItem: { id: crypto.randomUUID(), type: '', substance: '', severity: '', reaction: '' },
+        newItem: { id: crypto.randomUUID(), type: '', substance: '', severity: '', reaction: '', emergency_medication: '' },
         renderItem: (item: unknown, index: number, onUpdate: (item: unknown) => void, onRemove: () => void) => {
           const entry = item as WizardState['allergies'][number]
           return (
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <input placeholder="Type (e.g. Food, Drug, Environmental)" value={entry.type} onChange={(e) => onUpdate({ ...entry, type: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Substance" value={entry.substance} onChange={(e) => onUpdate({ ...entry, substance: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Severity" value={entry.severity ?? ''} onChange={(e) => onUpdate({ ...entry, severity: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-                <input placeholder="Reaction" value={entry.reaction ?? ''} onChange={(e) => onUpdate({ ...entry, reaction: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" />
-              </div>
-            </div>
+            <AllergyCard
+              type={entry.type}
+              substance={entry.substance}
+              severity={entry.severity ?? ''}
+              reaction={entry.reaction ?? ''}
+              emergencyMedication={entry.emergency_medication ?? ''}
+              onUpdate={(field: string, value: string) => onUpdate({ ...entry, [field]: value })}
+              onRemove={onRemove}
+            />
           )
         },
       },
@@ -286,6 +288,78 @@ function renderSection(
         <div className="space-y-6">
           {sectionContent}
           <HealthTips familyHistory={state.family_history} />
+        </div>
+      )
+    }
+
+    if (key === 'medications') {
+      return (
+        <div className="space-y-6">
+          <RepeatableSection
+            title={step.label}
+            items={state.medications}
+            onChange={(v) => setSection('medications', v)}
+            newItem={config.newItem}
+            renderItem={(item: unknown, index: number, onUpdate: (item: unknown) => void, onRemove: () => void) => {
+              const entry = item as WizardState['medications'][number]
+              return (
+                <MedicationCard
+                  medication={entry.medication}
+                  dosage={entry.dosage ?? ''}
+                  frequency={entry.frequency ?? ''}
+                  reason={entry.reason ?? ''}
+                  startDate={entry.start_date ?? ''}
+                  prescribingDoctor={entry.prescribing_doctor ?? ''}
+                  currentStatus={entry.current_status ?? ''}
+                  onUpdate={(field: string, value: string) => onUpdate({ ...entry, [field]: value })}
+                  onRemove={onRemove}
+                />
+              )
+            }}
+            emptyLabel="No medications yet"
+            addLabel="Add Medication"
+          />
+          <HealthTips medicalHistory={state.medications} />
+        </div>
+      )
+    }
+
+    if (key === 'allergies') {
+      return (
+        <div className="space-y-6">
+          <RepeatableSection
+            title={step.label}
+            items={state.allergies}
+            onChange={(v) => setSection('allergies', v)}
+            newItem={config.newItem}
+            renderItem={(item: unknown, index: number, onUpdate: (item: unknown) => void, onRemove: () => void) => {
+              const entry = item as WizardState['allergies'][number]
+              return (
+                <AllergyCard
+                  type={entry.type}
+                  substance={entry.substance}
+                  severity={entry.severity ?? ''}
+                  reaction={entry.reaction ?? ''}
+                  emergencyMedication={entry.emergency_medication ?? ''}
+                  onUpdate={(field: string, value: string) => onUpdate({ ...entry, [field]: value })}
+                  onRemove={onRemove}
+                />
+              )
+            }}
+            emptyLabel="No allergies listed"
+            addLabel="Add Allergy"
+          />
+        </div>
+      )
+    }
+
+    if (key === 'vaccinations') {
+      return (
+        <div className="space-y-6">
+          <VaccinationSection
+            items={state.vaccinations}
+            onChange={(v) => setSection('vaccinations', v)}
+          />
         </div>
       )
     }

@@ -106,8 +106,13 @@ export const fieldSpecs: Record<SectionKey, Spec[]> = {
   family_history: [
     { name: 'notes', label: 'General Notes', kind: 'textarea', placeholder: 'Any relevant family history notes', cols: 2, optional: true, rows: 3 },
   ],
-  medications: [],
-  allergies: [],
+  medications: [
+    { name: 'current_status', label: 'Current Status', kind: 'select', options: [{ value: 'active', label: 'Active' }, { value: 'completed', label: 'Completed' }, { value: 'discontinued', label: 'Discontinued' }, { value: 'as_needed', label: 'As Needed' }], cols: 2, optional: true },
+  ],
+  allergies: [
+    { name: 'type', label: 'Allergy Type', kind: 'select', options: [{ value: 'food', label: 'Food' }, { value: 'drug', label: 'Drug' }, { value: 'environmental', label: 'Environmental' }, { value: 'insect', label: 'Insect Sting' }, { value: 'latex', label: 'Latex' }, { value: 'other', label: 'Other' }], cols: 2 },
+    { name: 'severity', label: 'Severity', kind: 'chip', options: [{ value: 'mild', label: 'Mild' }, { value: 'moderate', label: 'Moderate' }, { value: 'severe', label: 'Severe' }, { value: 'life_threatening', label: 'Life-Threatening' }], cols: 4 },
+  ],
   vaccinations: [],
   women_health: [
     { name: 'pregnancy', label: 'Current Pregnancy', kind: 'select', options: [{ value: 'no', label: 'No' }, { value: 'planning', label: 'Planning' }, { value: 'pregnant', label: 'Pregnant' }, { value: 'postpartum', label: 'Postpartum' }], cols: 2 },

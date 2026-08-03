@@ -147,6 +147,7 @@ export interface AllergyEntry {
   substance: string
   severity: string
   reaction: string
+  emergency_medication: string
 }
 
 export interface VaccinationEntry {

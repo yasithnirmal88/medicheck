@@ -157,10 +157,11 @@ export const medicationsSchema = z.array(medicationEntrySchema)
 
 const allergyEntrySchema = z.object({
   id: z.string(),
-  type: stringField.min(1, 'Type is required'),
+  type: stringField,
   substance: stringField.min(1, 'Substance is required'),
   severity: optionalString,
   reaction: optionalString,
+  emergency_medication: optionalString,
 })
 
 export const allergiesSchema = z.array(allergyEntrySchema)
