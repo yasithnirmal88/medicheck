@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Award, BarChart2, ClipboardList, FlaskConical, HeartPulse, LifeBuoy, NotebookText, Repeat, TrendingUp } from 'lucide-react'
 import AppLayout from '@/layouts/AppLayout'
 import Card from '@/shared/ui/Card'
 import Button from '@/shared/ui/Button'
-import { fetchReportBySession } from '@/features/dashboard/api/patientService'
+import { fetchReportBySession, generateReport } from '@/features/dashboard/api/patientService'
 
 interface RiskIndicator {
   id: string
@@ -60,12 +60,24 @@ const STATUS_COLOR: Record<BodySystemScore['status'], string> = {
 }
 
 function useHealthReport(sessionId?: string) {
-  return useQuery({
+  const qc = useQueryClient()
+  const query = useQuery({
     queryKey: ['health-report', sessionId],
     queryFn: () => fetchReportBySession(sessionId!),
     enabled: !!sessionId,
     staleTime: 30_000,
+    retry: false,
   })
+  const generate = useMutation({
+    mutationFn: (sid: string) => generateReport(sid),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['health-report', sessionId] }),
+  })
+
+  return {
+    report: query.data,
+    isLoading: query.isLoading || generate.isPending,
+    generateReport: (sid: string) => generate.mutate(sid),
+  }
 }
 
 function ScoreGauge({ score }: { score: number }) {
@@ -184,13 +196,19 @@ function computeNextAssessment(): string {
 
 const ResultsDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const { data: report, isLoading } = useHealthReport(id)
+  const { report, isLoading, generateReport } = useHealthReport(id)
   const { overall, systems } = useMemo(() => deriveScores(report), [report])
   const risks = useMemo(deriveRisks, [])
   const recommendations = useMemo(deriveRecommendations, [])
   const labTests = useMemo(deriveLabTests, [])
   const lifestyle = useMemo(deriveLifestyle, [])
   const nextAssessment = useMemo(computeNextAssessment, [])
+
+  // Trigger AI report generation if the downstream processing hasn't produced one yet.
+  React.useEffect(() => {
+    if (!id || report || isLoading) return
+    generateReport(id)
+  }, [id, report, isLoading, generateReport])
 
   if (isLoading) {
     return (

@@ -7,6 +7,7 @@ import Skeleton from '@/shared/ui/Skeleton'
 import Button from '@/shared/ui/Button'
 import QuestionnaireHeader from '../components/QuestionnaireHeader'
 import QuestionnaireSidebar from '../components/QuestionnaireSidebar'
+import { AssessmentSummary } from '../components/AssessmentSummary'
 import QuestionnaireComplete from '../components/QuestionnaireComplete'
 import ReviewScreen from '../components/ReviewScreen'
 import QuestionRenderer from '../components/QuestionRenderer'
@@ -28,8 +29,11 @@ const QuestionnaireSessionPage: React.FC = () => {
     answers,
     history,
     progress,
-    answered,
-    totalQuestions,
+     answered,
+     skipped,
+     bodySystemsCovered,
+     estimatedTimeRemaining,
+     totalQuestions,
     isFirst,
     isLast,
     canGoNext,
@@ -109,6 +113,9 @@ const QuestionnaireSessionPage: React.FC = () => {
 
   const handleReturnToDashboard = () => navigate('/')
   const handleBackToAssessments = () => navigate('/questionnaires')
+  const handleViewResults = useCallback(() => {
+    if (sessionId) navigate(`/assessments/${sessionId}/results`)
+  }, [sessionId, navigate])
   const handleExit = () => {
     if (window.confirm('Exit the assessment? Your progress has been saved automatically.')) {
       navigate('/questionnaires')
@@ -151,7 +158,7 @@ const QuestionnaireSessionPage: React.FC = () => {
     return (
       <AppLayout>
         <div className="mx-auto max-w-3xl p-4">
-          <QuestionnaireComplete session={session} score={null} onReturnToDashboard={handleReturnToDashboard} />
+           <QuestionnaireComplete session={session} score={null} onReturnToDashboard={handleReturnToDashboard} onViewResults={handleViewResults} />
         </div>
       </AppLayout>
     )
@@ -197,6 +204,17 @@ const QuestionnaireSessionPage: React.FC = () => {
               onSaveDraft={() => {}}
             />
 
+            {/* Live assessment summary */}
+            <AssessmentSummary
+              flow={{
+                answered,
+                skipped,
+                totalQuestions,
+                bodySystemsCovered,
+                estimatedTimeRemaining,
+                progress,
+              }}
+            />
             {/* Question card */}
             <Card className="min-h-[260px]">
               {session.status === 'paused' && (

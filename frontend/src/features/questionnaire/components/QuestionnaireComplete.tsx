@@ -1,22 +1,21 @@
 import React from 'react'
 import Button from '@/shared/ui/Button'
 import Card from '@/shared/ui/Card'
-import type { AssessmentSession, SessionProgress } from '../types'
+import type { AssessmentSession } from '../types'
 
 interface QuestionnaireCompleteProps {
   session: AssessmentSession
   score?: { total: number; max: number; label?: string } | null
   onReturnToDashboard: () => void
+  onViewResults?: () => void
 }
 
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  if (mins === 0) return `${secs}s`
-  return `${mins}m ${secs}s`
-}
-
-const QuestionnaireComplete: React.FC<QuestionnaireCompleteProps> = ({ session, score, onReturnToDashboard }) => {
+const QuestionnaireComplete: React.FC<QuestionnaireCompleteProps> = ({
+  session,
+  score,
+  onReturnToDashboard,
+  onViewResults,
+}) => {
   const progress = session.progress
 
   return (
@@ -65,9 +64,20 @@ const QuestionnaireComplete: React.FC<QuestionnaireCompleteProps> = ({ session, 
         )}
       </Card>
 
-      <Button onClick={onReturnToDashboard} className="min-h-[44px] min-w-[200px]">
-        Return to Dashboard
-      </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+        {onViewResults && (
+          <Button
+            variant="primary"
+            onClick={onViewResults}
+            className="min-h-[44px] min-w-[200px]"
+          >
+            View AI Report
+          </Button>
+        )}
+        <Button onClick={onReturnToDashboard} className="min-h-[44px] min-w-[200px]">
+          Return to Dashboard
+        </Button>
+      </div>
     </div>
   )
 }
