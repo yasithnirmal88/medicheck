@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import asyncio
-import sys
 from collections.abc import AsyncGenerator
 from typing import Any
+
+from alembic import command
+from alembic.config import Config
 
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import (
@@ -89,17 +90,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-async def init_db() -> None:
-    """Run database migrations using Alembic."""
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, "-m", "alembic", "upgrade", "head",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await proc.communicate()
-    if proc.returncode != 0:
-        logger.error("Migration failed: %s", stderr.decode())
-        raise RuntimeError(f"Alembic migration failed: {stderr.decode()}")
+def init_db() -> None:
+    """Run Alembic migrations."""
+    cfg = Config("alembic.ini")
+    command.upgrade(cfg, "head")
     logger.info("Database migrations applied successfully")
 
 

@@ -118,8 +118,28 @@ class Settings(BaseSettings):
     hsts_max_age: int = 31536000
     csp_report_only: bool = False
 
-    celery_broker_url: str = "redis://localhost:6379/1"
-    celery_result_backend: str = "redis://localhost:6379/1"
+    celery_broker_url: str = ""
+    celery_result_backend: str = ""
+
+    @field_validator("celery_broker_url", mode="before")
+    @classmethod
+    def validate_celery_broker_url(cls, v: str | None, info: dict) -> str:
+        if v:
+            return v
+        values = info.data
+        host = values.get("redis_host", "localhost")
+        port = values.get("redis_port", 6379)
+        return f"redis://{host}:{port}/1"
+
+    @field_validator("celery_result_backend", mode="before")
+    @classmethod
+    def validate_celery_result_backend(cls, v: str | None, info: dict) -> str:
+        if v:
+            return v
+        values = info.data
+        host = values.get("redis_host", "localhost")
+        port = values.get("redis_port", 6379)
+        return f"redis://{host}:{port}/1"
 
     @property
     def is_development(self) -> bool:

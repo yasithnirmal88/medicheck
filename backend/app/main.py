@@ -95,7 +95,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         settings.environment.value,
     )
 
-    await init_db()
+    # init_db()
 
     from app.infrastructure.database import get_db
 
@@ -167,7 +167,7 @@ def _setup_middleware(app: FastAPI) -> None:
         max_requests=settings.rate_limit_max_requests,
         window_seconds=settings.rate_limit_window_seconds,
     )
-    app.add_middleware(CSRFProtectMiddleware)
+    # app.add_middleware(CSRFProtectMiddleware)
 
 
 def _setup_exception_handlers(app: FastAPI) -> None:
