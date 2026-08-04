@@ -17,6 +17,7 @@ from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.cdse import router as cdse_router
 from app.api.v1.endpoints.graph import router as graph_router
 from app.api.v1.endpoints.health import router as health_router
+from app.api.v1.endpoints.lab_results import router as lab_results_router
 from app.api.v1.endpoints.profile import router as profile_router
 from app.api.v1.endpoints.profile_extended import router as profile_extended_router
 from app.api.v1.endpoints.questionnaire import router as questionnaire_router
@@ -32,6 +33,7 @@ router.include_router(auth_router)
 router.include_router(users_router)
 router.include_router(profile_router)
 router.include_router(profile_extended_router)
+router.include_router(lab_results_router)
 router.include_router(questionnaire_router)
 router.include_router(admin_router)
 router.include_router(graph_router)

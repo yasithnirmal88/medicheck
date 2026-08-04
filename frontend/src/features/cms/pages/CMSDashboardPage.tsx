@@ -6,10 +6,10 @@ import { useDashboardOverview, useRecentActivity } from '../hooks/useCmsQueries'
 import type { RecentActivity } from '../types'
 
 const quickActions = [
-  { to: '/cms/builder', label: 'Question Builder', desc: 'Build and manage questionnaire groups and questions', icon: Layers, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' },
-  { to: '/cms/rules', label: 'Rule Builder', desc: 'Create and evaluate clinical decision rules', icon: GitBranch, color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' },
-  { to: '/cms/knowledge-graph', label: 'Knowledge Graph', desc: 'Visualize entity relationships and graph topology', icon: Network, color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600' },
-  { to: '/cms/approvals', label: 'Publishing', desc: 'Manage approvals, reviews, and publish content', icon: CheckCircle2, color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' },
+  { to: '/doctor/builder', label: 'Question Builder', desc: 'Build and manage questionnaire groups and questions', icon: Layers, color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600' },
+  { to: '/doctor/rules-builder', label: 'Rule Builder', desc: 'Create and evaluate clinical decision rules', icon: GitBranch, color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' },
+  { to: '/doctor/graph', label: 'Knowledge Graph', desc: 'Visualize entity relationships and graph topology', icon: Network, color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600' },
+  { to: '/doctor/approvals', label: 'Publishing', desc: 'Manage approvals, reviews, and publish content', icon: CheckCircle2, color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' },
 ]
 
 export const CMSDashboardPage: React.FC = () => {

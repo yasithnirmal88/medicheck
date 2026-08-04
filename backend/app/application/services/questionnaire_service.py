@@ -95,13 +95,17 @@ class QuestionnaireService:
             options = await self._option_repo.find_by_question(first_question.id)
 
         return {
+            "id": created.id,
             "session_id": created.id,
             "status": created.status.value,
+            "questionnaire_template_id": created.questionnaire_template_id,
             "current_question": (
                 self._serialize_question(first_question, options)
                 if first_question
                 else None
             ),
+            "created_at": created.created_at.isoformat() if created.created_at else None,
+            "updated_at": created.updated_at.isoformat() if created.updated_at else None,
         }
 
     async def get_session(self, user: Any, session_id: str) -> dict[str, Any]:
@@ -128,12 +132,15 @@ class QuestionnaireService:
             "status": session.status.value,
             "current_question": question,
             "progress": progress.to_dict() if progress else None,
+            "questionnaire_template_id": session.questionnaire_template_id,
             "started_at": (
                 session.started_at.isoformat() if session.started_at else None
             ),
             "completed_at": (
                 session.completed_at.isoformat() if session.completed_at else None
             ),
+            "created_at": session.created_at.isoformat() if session.created_at else None,
+            "updated_at": session.updated_at.isoformat() if session.updated_at else None,
         }
 
     async def save_answer(
@@ -242,7 +249,67 @@ class QuestionnaireService:
             current_q = await self._question_repo.find_by_id(
                 session.current_question_id
             )
-        return await self._engine.get_next_question(session, current_q)
+        next_q = await self._engine.get_next_question(session, current_q)
+        if next_q is None:
+            return None
+
+        # Phase 3: adaptive branching — an authored branch rule (CMS) can
+        # override the default sequential next question and route the flow
+        # to a specific target question.
+        branch_target = await self._apply_branch_rules(session)
+        if branch_target is not None:
+            return branch_target
+        return next_q
+
+    async def _apply_branch_rules(
+        self, session: AssessmentSession
+    ) -> Question | None:
+        from app.infrastructure.persistence.models.assessment_answer import (
+            AssessmentAnswerModel,
+        )
+        from app.infrastructure.persistence.models.branch_rule import BranchRuleModel
+
+        rows = await self._session.execute(
+            select(AssessmentAnswerModel).where(
+                AssessmentAnswerModel.session_id == session.id
+            )
+        )
+        answers_map: dict[str, Any] = {}
+        for row in rows.scalars().all():
+            rv = row.response_value or {}
+            if isinstance(rv, dict):
+                answers_map[row.question_id] = rv.get("value")
+            else:
+                answers_map[row.question_id] = rv
+        if not answers_map:
+            return None
+
+        user_attrs = session.metadata.get("user_attributes", {})
+        rule_rows = await self._session.execute(
+            select(BranchRuleModel).where(BranchRuleModel.is_active == True)  # noqa: E712
+        )
+        rules = [
+            {
+                "priority": r.priority,
+                "is_active": r.is_active,
+                "condition_operator": r.condition_operator,
+                "conditions": r.conditions,
+                "target_question_id": r.target_question_id,
+            }
+            for r in rule_rows.scalars().all()
+        ]
+        if not rules:
+            return None
+
+        target_id = self._branching.evaluate_branch_rules(
+            rules, answers_map, user_attrs
+        )
+        if not target_id or target_id in answers_map:
+            return None
+        target = await self._question_repo.find_by_id(target_id)
+        if target is None:
+            return None
+        return target
 
     async def pause_session(self, user: Any, session_id: str) -> dict[str, Any]:
         session = await self._session_repo.find_by_id(session_id)
@@ -366,8 +433,15 @@ class QuestionnaireService:
 
         scored_groups = {}
         for gid, data in group_scores.items():
+            # Honor each question's configured scoring_weight instead of using
+            # a flat weight of 1.0 for every question.
+            weights = {
+                a["question_id"]: float(q_map[a["question_id"]].scoring_weight or 1.0)
+                for a in data["answers"]
+                if a["question_id"] in q_map
+            }
             scored_groups[gid] = self._scoring.calculate_group_score(
-                data["answers"], {}
+                data["answers"], weights
             )
 
         overall = self._scoring.calculate_overall_score(scored_groups)
@@ -395,6 +469,14 @@ class QuestionnaireService:
                 if hasattr(question.difficulty, "value")
                 else question.difficulty
             ),
+            "status": (
+                question.status.value
+                if hasattr(question.status, "value")
+                else question.status
+            ),
+            "order_index": question.order_index,
+            "body_system_id": question.body_system_id,
+            "question_group_id": question.question_group_id,
             "options": [
                 {
                     "id": o.id,

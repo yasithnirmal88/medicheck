@@ -48,6 +48,18 @@ class ReportService:
         # load decision result
         result = await self.dec_repo.get_result_by_session(session_id)
         if not result:
+            # Phase 3: run the clinical decision engine on the fly so a report
+            # can be generated directly after questionnaire completion without
+            # a separate out-of-band `POST /assessment/process` call.
+            from app.application.services.clinical_decision_service import (
+                ClinicalDecisionService,
+            )
+
+            await ClinicalDecisionService(self.session).process_assessment(
+                session_id, user_id
+            )
+            result = await self.dec_repo.get_result_by_session(session_id)
+        if not result:
             raise ValueError("No decision result for session; run CDSE first")
 
         # Batch-load indicators for all activated indicators

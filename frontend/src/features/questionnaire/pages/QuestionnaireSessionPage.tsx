@@ -26,6 +26,7 @@ const QuestionnaireSessionPage: React.FC = () => {
   const {
     session,
     currentQuestion,
+    bodySystemName,
     answers,
     history,
     progress,
@@ -170,7 +171,7 @@ const QuestionnaireSessionPage: React.FC = () => {
         <div className="mx-auto max-w-3xl p-4">
           <Card>
             <ReviewScreen
-              questions={currentQuestion ? [currentQuestion] : []}
+              questions={[...history, ...(currentQuestion ? [currentQuestion] : [])]}
               answers={reviewAnswers}
               onEdit={() => setPhase('question')}
               onSubmit={handleSubmitReview}
@@ -198,7 +199,7 @@ const QuestionnaireSessionPage: React.FC = () => {
               elapsedTime={0}
               saveStatus={saveStatus}
               isSaving={isSaving}
-              bodySystemName={currentQuestion ? currentQuestion.body_system_id ?? null : null}
+              bodySystemName={bodySystemName}
               onPause={pause}
               onExit={handleExit}
               onSaveDraft={() => {}}

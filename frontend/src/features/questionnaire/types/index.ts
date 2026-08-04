@@ -102,7 +102,7 @@ export interface AssessmentSession {
   status: 'in_progress' | 'paused' | 'completed' | 'cancelled'
   current_question: Question | null
   progress: SessionProgress
-  questionnaire_template_id: string
+  questionnaire_template_id: string | null
   created_at: string
   updated_at: string
 }

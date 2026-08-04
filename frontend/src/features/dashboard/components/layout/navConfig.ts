@@ -25,32 +25,31 @@ export interface NavItem {
 }
 
 export const primaryNav: NavItem[] = [
-  { label: 'Dashboard', to: '/app', icon: LayoutDashboard },
-  { label: 'Health Profile', to: '/profile', icon: User },
-  { label: 'Questionnaires', to: '/questionnaires', icon: ClipboardList },
-  { label: 'Assessments', to: '/assessments', icon: Stethoscope },
-  { label: 'Health Reports', to: '/assessments', icon: FileText },
-  { label: 'Medical Timeline', to: '/timeline', icon: Activity },
+  { label: 'Dashboard', to: '/patient/dashboard', icon: LayoutDashboard },
+  { label: 'Health Profile', to: '/patient/profile', icon: User },
+  { label: 'Questionnaires', to: '/patient/questionnaires', icon: ClipboardList },
+  { label: 'Assessments', to: '/patient/assessments', icon: Stethoscope },
+  { label: 'Health Reports', to: '/patient/health-reports', icon: FileText },
+  { label: 'Medical Timeline', to: '/patient/timeline', icon: Activity },
 ]
 
 export const secondaryNav: NavItem[] = [
-  { label: 'Recommendations', to: '/recommendations', icon: HeartPulse },
-  { label: 'Laboratory Results', to: '/body-systems', icon: FlaskConical },
-  { label: 'Knowledge Center', to: '/cms', icon: BookOpen },
-  { label: 'Body Systems', to: '/body-systems', icon: Layers },
+  { label: 'Recommendations', to: '/patient/recommendations', icon: HeartPulse },
+  { label: 'Laboratory Results', to: '/patient/laboratory-results', icon: FlaskConical },
+  { label: 'Body Systems', to: '/patient/body-systems', icon: Layers },
 ]
 
 export const tertiaryNav: NavItem[] = [
   { label: 'Appointments', icon: Calendar, disabled: true },
-  { label: 'Settings', to: '/profile', icon: Settings },
+  { label: 'Settings', to: '/patient/profile', icon: Settings },
 ]
 
 export const utilityItems: NavItem[] = [
-  { label: 'Settings', to: '/profile', icon: Settings },
+  { label: 'Settings', to: '/patient/profile', icon: Settings },
   { label: 'Help & Support', icon: BookOpen },
   { label: 'Logout', icon: LogOut },
 ]
 
 export function defaultActiveHref(): string {
-  return '/app'
+  return '/patient/dashboard'
 }

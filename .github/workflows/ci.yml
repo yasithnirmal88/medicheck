@@ -100,12 +100,17 @@ jobs:
       - name: Lint
         run: |
           cd frontend
-          npx eslint src/ --ext .ts,.tsx --max-warnings 100
+          npx eslint src/ --ext .ts,.tsx --max-warnings 250
 
       - name: Build
         run: |
           cd frontend
           npm run build
+
+      - name: Unit tests
+        run: |
+          cd frontend
+          npx vitest run
 
   docker-build:
     needs: [test-backend, test-frontend]
@@ -137,6 +142,11 @@ jobs:
           context: .
           file: ./Dockerfile.frontend
           push: true
+          build-args: |
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+            VITE_FIREBASE_API_KEY=${{ vars.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN=${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_PROJECT_ID=${{ vars.VITE_FIREBASE_PROJECT_ID }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}

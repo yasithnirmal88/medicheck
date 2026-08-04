@@ -652,15 +652,17 @@ async def test_edge_session_not_found(db_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_edge_report_without_cdse(db_session: AsyncSession):
-    """Edge: generate report before CDSE -> ValueError"""
+    """Edge: generate report before CDSE now auto-runs the decision engine."""
     session = db_session
     sess = AssessmentSession.create(user_id="no_cdse_user", total_questions=0)
     sess_repo = SQLAssessmentSessionRepository(session)
     created_sess = await sess_repo.create(sess)
 
     report_svc = ReportService(session)
-    with pytest.raises(ValueError, match="No decision result for session"):
-        await report_svc.generate_report(created_sess.id)
+    # Phase 3: the CDSE runs on the fly, so an empty session still produces a
+    # (mostly empty) report instead of raising "No decision result for session".
+    rpt = await report_svc.generate_report(created_sess.id)
+    assert "report_id" in rpt
 
 
 # =========================================================================

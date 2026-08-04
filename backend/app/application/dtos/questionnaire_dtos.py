@@ -34,6 +34,9 @@ class QuestionResponse(BaseModel):
     is_required: bool = False
     validation_rules: dict[str, Any] = {}
     scoring_weight: float = 1.0
+    status: str | None = None
+    body_system_id: str | None = None
+    question_group_id: str | None = None
     options: list[QuestionOptionResponse] = []
 
     model_config = {"from_attributes": True}
@@ -84,6 +87,7 @@ class StartSessionRequest(BaseModel):
 
 
 class StartSessionResponse(BaseModel):
+    id: str
     session_id: str
     status: str = "active"
     current_question: QuestionResponse | None = None
@@ -134,8 +138,11 @@ class AssessmentSessionResponse(BaseModel):
     status: str
     current_question: QuestionResponse | None = None
     progress: SessionProgressResponse | None = None
+    questionnaire_template_id: str | None = None
     started_at: datetime | None = None
     completed_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

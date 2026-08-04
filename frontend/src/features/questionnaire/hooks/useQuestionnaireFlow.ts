@@ -150,7 +150,7 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
     setHistory((prev) => {
       if (prev.length === 0) return prev
       const nextHistory = prev.slice(0, -1)
-      const previous = nextHistory[nextHistory.length - 1]
+      const previous = prev[prev.length - 1]
       if (previous) setCurrentQuestion(previous)
       return nextHistory
     })
@@ -195,6 +195,7 @@ export function useQuestionnaireFlow(sessionId: string | undefined) {
     // state
     session,
     currentQuestion,
+    bodySystemName: currentQuestion ? resolveBodySystemName(currentQuestion) : null,
     answers,
     history,
     progress,

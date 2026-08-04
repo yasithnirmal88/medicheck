@@ -24,6 +24,17 @@ from app.infrastructure.persistence.repositories.sql_profile_repository import (
 )
 
 
+def _risk_label(probability: float) -> str:
+    """Map a normalized disease probability to a human-readable risk label."""
+    if probability >= 0.75:
+        return "High"
+    if probability >= 0.5:
+        return "Moderate"
+    if probability >= 0.25:
+        return "Low"
+    return "Very Low"
+
+
 class ClinicalDecisionService:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -143,11 +154,13 @@ class ClinicalDecisionService:
         # conditions aggregation
         condition_scores: dict[str, float] = {}
         condition_indicator_map: dict[str, list] = {}
+        condition_names: dict[str, str] = {}
         for ind_id, score in activated_indicators:
             conds = conditions_map.get(ind_id, [])
             for c in conds:
                 condition_scores[c.id] = condition_scores.get(c.id, 0.0) + score
                 condition_indicator_map.setdefault(c.id, []).append(ind_id)
+                condition_names.setdefault(c.id, getattr(c, "name", c.id))
 
         activated_conditions = [
             (cid, sc) for cid, sc in condition_scores.items() if sc > 0
@@ -170,14 +183,30 @@ class ClinicalDecisionService:
             )
             # Clamp to [0, 1]
             confidence = max(0.0, min(1.0, confidence))
+            # Phase 3: disease probability = normalized confidence, with a
+            # risk category label applied for explainability.
+            probability = confidence
+            risk_label = _risk_label(probability)
             await self.dec_repo.add_activated_condition(
                 result.id, cid, sc, confidence, None
             )
             text = (
                 f"[trace:{trace_id}] Condition {cid}: score={sc}, "
-                f"contributing_indicators={contributors}, confidence={confidence}"
+                f"contributing_indicators={contributors}, "
+                f"probability={probability:.3f}, risk_label={risk_label}"
             )
             await self.dec_repo.add_explanation(result.id, "condition", cid, text)
+
+            # Phase 3: generate a follow-up screening for high-probability
+            # conditions so the screenings feature is populated.
+            if probability >= 0.5:
+                name = f"Follow-up screening — {condition_names.get(cid, cid)}"
+                await self.dec_repo.add_screening(
+                    result.id,
+                    name,
+                    reason=f"[trace:{trace_id}] Condition {cid} "
+                    f"(probability={probability:.3f}) requires follow-up screening",
+                )
 
             # recommendations with explainable source
             recs = recs_map.get(cid, [])
@@ -198,10 +227,29 @@ class ClinicalDecisionService:
 
         # body system aggregation (collect body system ids from indicators -> conditions mapping)
         # For now, produce summary
+        disease_probabilities = {
+            cid: {
+                "name": condition_names.get(cid, cid),
+                "score": round(sc, 3),
+                "probability": round(
+                    max(0.0, min(1.0, sc / max_possible_condition_score))
+                    if max_possible_condition_score > 0
+                    else 0.0,
+                    3,
+                ),
+                "risk_label": _risk_label(
+                    sc / max_possible_condition_score
+                    if max_possible_condition_score > 0
+                    else 0.0
+                ),
+            }
+            for cid, sc in activated_conditions
+        }
         summary = {
             "trace_id": trace_id,
             "activated_indicators": len(activated_indicators),
             "activated_conditions": len(activated_conditions),
+            "disease_probabilities": disease_probabilities,
             "indicator_scores": {k: v for k, v in indicator_scores.items()},
         }
         # update result summary and confidence

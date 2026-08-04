@@ -20,7 +20,7 @@ export function validateField(key: SectionKey, fieldName: string, value: unknown
 }
 
 export function getMissingFields(state: WizardState): Record<SectionKey, string[]> {
-  const missing: Record<SectionKey, string[]> = {}
+  const missing = {} as Record<SectionKey, string[]>
   for (const key of Object.keys(sectionSchemas) as SectionKey[]) {
     const schema = sectionSchemas[key]
     if (!schema) continue

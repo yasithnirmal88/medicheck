@@ -32,22 +32,6 @@ async def list_templates(
     return [QuestionnaireTemplateResponse.from_attributes(t) for t in templates]
 
 
-@router.get("/{id}", summary="Get questionnaire template detail", response_model=QuestionnaireTemplateResponse)
-async def get_template_detail(
-    id: str,
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[AsyncSession, Depends(get_db)],
-):
-    from app.infrastructure.persistence.repositories.sql_questionnaire_repository import (
-        SQLQuestionnaireRepository,
-    )
-    repo = SQLQuestionnaireRepository(session)
-    template = await repo.find_by_id(id)
-    if not template:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Template not found")
-    return QuestionnaireTemplateResponse.from_attributes(template)
-
 @router.post("/{id}/start", response_model=StartSessionResponse, summary="Start a questionnaire session", description="Start a questionnaire session for the authenticated user using the given template id.")
 async def start_session(
     id: str,
@@ -135,3 +119,20 @@ async def get_session_progress(
 ):
     svc = QuestionnaireService(session)
     return await svc.get_session_progress(current_user, id)
+
+
+@router.get("/{id}", summary="Get questionnaire template detail", response_model=QuestionnaireTemplateResponse)
+async def get_template_detail(
+    id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+):
+    from app.infrastructure.persistence.repositories.sql_questionnaire_repository import (
+        SQLQuestionnaireRepository,
+    )
+    repo = SQLQuestionnaireRepository(session)
+    template = await repo.find_by_id(id)
+    if not template:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Template not found")
+    return QuestionnaireTemplateResponse.from_attributes(template)

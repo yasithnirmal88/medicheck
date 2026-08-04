@@ -86,7 +86,7 @@ async def progress(
 async def search(
     current_user: Annotated[User, Depends(get_current_active_user)],
     session: Annotated[AsyncSession, Depends(get_db)],
-    q: str = Body(""),
+    q: str = "",
 ):
     svc = QuestionnaireService(session)
     return await svc.search_questions(current_user, q)

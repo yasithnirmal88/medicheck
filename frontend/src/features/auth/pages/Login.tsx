@@ -11,9 +11,16 @@ import Alert from '@/shared/ui/Alert'
 import { loginSchema } from '../schemas/login'
 import type { LoginFormValues } from '../types/auth'
 import { useLogin, useGoogleLogin, getAuthErrorMessage } from '../hooks/useLogin'
+import { useAuth } from '../../../hooks/useAuth'
+import { roleHomePath } from '../types/auth'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
+  const { role } = useAuth()
+
+  const goToPortal = () => {
+    navigate(role ? roleHomePath(role) : '/portal', { replace: true })
+  }
 
   const {
     register,
@@ -30,7 +37,7 @@ const LoginPage: React.FC = () => {
   const onEmailSubmit = async (values: LoginFormValues) => {
     try {
       await login.mutateAsync(values)
-      navigate('/app')
+      goToPortal()
     } catch {
       // surface below via login.error
     }
@@ -39,7 +46,7 @@ const LoginPage: React.FC = () => {
   const onGoogleSubmit = async () => {
     try {
       await googleLogin.mutateAsync()
-      navigate('/app')
+      goToPortal()
     } catch {
       // surface below
     }

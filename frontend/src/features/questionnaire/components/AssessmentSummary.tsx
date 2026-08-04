@@ -54,7 +54,7 @@ function ProgressBar({ value }: { value: number }) {
 }
 
 export const AssessmentSummary = memo(
-  ({
+  function AssessmentSummary({
     flow: {
       answered,
       skipped,
@@ -65,7 +65,7 @@ export const AssessmentSummary = memo(
     },
   }: {
     flow: FlowSlice
-  }) => {
+  }) {
     const answeredAndSkipped = answered + skipped
     const remaining = Math.max((totalQuestions ?? 0) - answeredAndSkipped, 0)
     const completion = progress?.completion_percentage ?? 0

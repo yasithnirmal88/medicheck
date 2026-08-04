@@ -13,11 +13,8 @@
     "baseUrl": "src",
     "paths": {
       "@/*": ["./*"],
-      "@components/*": ["components/*"],
       "@hooks/*": ["hooks/*"],
-      "@services/*": ["services/*"],
-      "@layouts/*": ["layouts/*"],
-      "@pages/*": ["pages/*"]
+      "@layouts/*": ["layouts/*"]
     },
     "types": ["vitest/globals"]
   },

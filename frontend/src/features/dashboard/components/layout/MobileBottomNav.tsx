@@ -3,11 +3,11 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const items = [
-  { label: 'Dashboard', to: '/app', icon: HomeIcon },
-  { label: 'Questionnaires', to: '/questionnaires', icon: ListIcon },
-  { label: 'Assessments', to: '/assessments', icon: StethoscopeIcon },
-  { label: 'Timeline', to: '/timeline', icon: ClockIcon },
-  { label: 'Profile', to: '/profile', icon: UserIcon },
+  { label: 'Dashboard', to: '/patient/dashboard', icon: HomeIcon },
+  { label: 'Questionnaires', to: '/patient/questionnaires', icon: ListIcon },
+  { label: 'Assessments', to: '/patient/assessments', icon: StethoscopeIcon },
+  { label: 'Timeline', to: '/patient/timeline', icon: ClockIcon },
+  { label: 'Profile', to: '/patient/profile', icon: UserIcon },
 ]
 
 export const MobileBottomNav: React.FC = () => {
@@ -20,7 +20,7 @@ export const MobileBottomNav: React.FC = () => {
         <NavLink
           key={item.to}
           to={item.to}
-          end={item.to === '/app'}
+          end={item.to === '/patient/dashboard'}
           className={({ isActive }) =>
             cn(
               'flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium',

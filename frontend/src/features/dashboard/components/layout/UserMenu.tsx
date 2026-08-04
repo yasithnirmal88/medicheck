@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getAuth, signOut } from 'firebase/auth'
-import { ChevronDown, HelpCircle, LogOut, Settings, User } from 'lucide-react'
+import { ChevronDown, HelpCircle, LogOut, Repeat, Settings, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
+import { roleHomePath } from '@/features/auth/types/auth'
 import { initials } from '../../utils/format'
 
 export interface UserMenuProps {
@@ -15,7 +16,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ name, email }) => {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, role, setRole } = useAuth()
 
   useEffect(() => {
     if (!open) return
@@ -48,6 +49,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({ name, email }) => {
     { label: 'Settings', icon: Settings, onClick: () => go('/profile') },
     { label: 'Help', icon: HelpCircle, onClick: () => setOpen(false) },
   ]
+
+  const swapPortal = () => {
+    if (!role) return
+    setOpen(false)
+    const next = role === 'patient' ? 'doctor' : 'patient'
+    setRole(next)
+    navigate(roleHomePath(next))
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -86,6 +95,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({ name, email }) => {
                 {item.label}
               </button>
             ))}
+            <button
+              role="menuitem"
+              onClick={swapPortal}
+              className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              <Repeat className="h-4 w-4" />
+              {role === 'patient' ? 'Open Doctor CMS' : 'Switch to Patient Portal'}
+            </button>
             <button
               role="menuitem"
               onClick={onLogout}

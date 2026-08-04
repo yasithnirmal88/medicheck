@@ -42,23 +42,6 @@ async def list_questions(
     return result
 
 
-@router.get("/{id}", response_model=QuestionResponse)
-async def get_question_detail(
-    id: str,
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    session: Annotated[AsyncSession, Depends(get_db)],
-):
-    repo = SQLQuestionRepository(session)
-    opt_repo = SQLQuestionOptionRepository(session)
-    q = await repo.find_by_id(id)
-    if not q:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=404, detail="Question not found")
-    opts = await opt_repo.find_by_question(q.id)
-    return QuestionResponse.from_entity(q, opts)
-
-
 @router.get("/by-body-system/{code}", response_model=list[QuestionResponse])
 async def get_questions_by_body_system(
     code: str,
@@ -98,3 +81,20 @@ async def search_questions(
         fromlist=["QuestionnaireService"],
     ).QuestionnaireService(session)
     return await svc.search_questions(current_user, q)
+
+
+@router.get("/{id}", response_model=QuestionResponse)
+async def get_question_detail(
+    id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+):
+    repo = SQLQuestionRepository(session)
+    opt_repo = SQLQuestionOptionRepository(session)
+    q = await repo.find_by_id(id)
+    if not q:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="Question not found")
+    opts = await opt_repo.find_by_question(q.id)
+    return QuestionResponse.from_entity(q, opts)

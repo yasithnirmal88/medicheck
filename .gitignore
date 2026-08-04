@@ -38,3 +38,6 @@ celerybeat.pid
 
 # Logs
 *.log
+
+# Test coverage
+coverage/

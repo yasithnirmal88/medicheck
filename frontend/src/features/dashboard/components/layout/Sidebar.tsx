@@ -69,7 +69,7 @@ function NavRow({
     <NavLink
       to={item.to}
       onClick={onNavigate}
-      end={item.to === '/app'}
+      end={item.to === '/app' || item.to === '/patient/dashboard'}
       title={collapsed ? item.label : undefined}
       className={({ isActive }) => linkClass(isActive)}
     >

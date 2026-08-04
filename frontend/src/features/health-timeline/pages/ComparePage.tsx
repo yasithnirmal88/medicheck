@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React from 'react'
 import AppLayout from '@/layouts/AppLayout'
 import Card from '@/shared/ui/Card'
-import { useCompareReports, useReports } from '../hooks/useTimeline'
+import { useCompareReports } from '../hooks/useTimeline'
 import { useSearchParams } from 'react-router-dom'
 
 export default function ComparePage() {
