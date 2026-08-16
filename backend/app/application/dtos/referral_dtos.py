@@ -35,6 +35,16 @@ ReferralStatus = Literal[
     "declined",
     "unable_to_access",
     "cancelled",
+    # Phase 10 — receiving-side / facility lifecycle states.
+    # ``sent``/``received``/``accepted`` track the facility handoff;
+    # ``expired``/``lost_to_followup`` are terminal operational states.
+    # These are operational/care-continuity states. They NEVER modify CDSE
+    # scoring, severity, or recommendation generation.
+    "sent",
+    "received",
+    "accepted",
+    "expired",
+    "lost_to_followup",
 ]
 
 BarrierType = Literal[
@@ -73,6 +83,11 @@ class ReferralResponse(BaseModel):
     patient_acknowledged: bool = False
     notes: str | None = None
     completed_at: datetime | None = None
+    # Phase 10 — facility connection.
+    facility_id: str | None = None
+    facility_name: str | None = None
+    receiving_status: str | None = None
+    scheduled_for: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -189,3 +204,123 @@ class ReferralExplanationResponse(BaseModel):
 
 
 ReferralDetailResponse.model_rebuild()
+
+
+# ── Phase 10: referral creation + facility feedback + care outcomes ────
+
+
+class CreateReferralRequest(BaseModel):
+    """Create a referral from an existing deterministic recommendation.
+
+    The recommendation_id MUST come from a CDSE-generated recommendation
+    (originating_session_id). The service verifies the session belongs to
+    the patient and that the recommendation category is referral-eligible.
+    AI never participates in eligibility.
+    """
+
+    originating_session_id: str
+    recommendation_id: str
+    referral_type: ReferralType
+    assigned_chw_user_id: str | None = None
+    facility_id: str | None = None
+    due_at: datetime | None = None
+    notes: str | None = None
+
+
+class FacilityFeedbackRequest(BaseModel):
+    """Receiving-side facility feedback on a referral.
+
+    Records the facility handoff status. Clinical notes are NOT accepted
+    here (no second medical-record system). Only operational status +
+    a short non-clinical note.
+    """
+
+    receiving_status: Literal[
+        "received", "accepted", "declined", "scheduled", "completed",
+        "lost_to_followup",
+    ]
+    scheduled_for: datetime | None = None
+    notes: str | None = None
+
+
+CareOutcomeCategory = Literal[
+    "screened",
+    "referred",
+    "referral_received",
+    "appointment_scheduled",
+    "care_received",
+    "followup_completed",
+    "lost_to_followup",
+]
+
+
+class CareOutcomeRequest(BaseModel):
+    outcome_category: CareOutcomeCategory
+    recorded_at: datetime | None = None
+    source: Literal["manual", "chw", "facility", "system"] = "manual"
+    notes: str | None = None
+
+
+class CareOutcomeResponse(BaseModel):
+    id: str
+    referral_id: str
+    patient_user_id: str
+    outcome_category: CareOutcomeCategory
+    recorded_by_user_id: str
+    recorded_by_role: ActorRole
+    recorded_at: datetime
+    source: str
+    notes: str | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+# ── Facility DTOs ──────────────────────────────────────────────────────
+
+
+FacilityAvailabilityStatus = Literal[
+    "available", "limited", "unavailable", "unknown"
+]
+
+
+class FacilityServiceResponse(BaseModel):
+    id: str
+    facility_id: str
+    service_type: str
+    name: str
+    is_active: bool
+
+    model_config = {"from_attributes": True}
+
+
+class FacilityResponse(BaseModel):
+    id: str
+    code: str
+    name: str
+    service_type: str | None = None
+    region: str | None = None
+    contact_channel: str | None = None
+    availability_status: FacilityAvailabilityStatus
+    is_active: bool
+    description: str | None = None
+    services: list[FacilityServiceResponse] = []
+
+    model_config = {"from_attributes": True}
+
+
+class FacilityListResponse(BaseModel):
+    items: list[FacilityResponse]
+    total: int
+
+
+class FacilityCreateRequest(BaseModel):
+    code: str
+    name: str
+    service_type: str | None = None
+    region: str | None = None
+    contact_channel: str | None = None
+    availability_status: FacilityAvailabilityStatus = "unknown"
+    description: str | None = None
+    services: list[dict] = []
+

@@ -65,6 +65,19 @@ class ReferralModel(BaseModel):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+    # Phase 10 — facility connection (additive, nullable). A referral may be
+    # routed to a facility; receiving-side status is recorded here and in the
+    # append-only status_events. NEVER inferred from a timestamp automatically.
+    facility_id: Mapped[str | None] = mapped_column(
+        String(32), ForeignKey("facilities.id", ondelete="SET NULL"),
+        nullable=True, index=True,
+    )
+    receiving_status: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, index=True,
+    )
+    scheduled_for: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
 
     status_events = relationship(
         "ReferralStatusEventModel", back_populates="referral",

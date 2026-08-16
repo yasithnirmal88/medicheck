@@ -56,6 +56,15 @@ const SettingsPage = React.lazy(() => import('../features/cms/pages/SettingsPage
 // Phase 6 — Population Health & SDG Analytics
 const AnalyticsDashboardPage = React.lazy(() => import('../features/analytics/pages/AnalyticsDashboardPage'))
 
+// Phase 10 — Interoperability, Health-System Integration & Outcome Feedback
+const InteroperabilityDashboardPage = React.lazy(() =>
+  import('../features/interop/pages/InteroperabilityDashboardPage')
+)
+const SdgDashboardPage = React.lazy(() => import('../features/interop/pages/SdgDashboardPage'))
+const CareContinuityPage = React.lazy(() => import('../features/interop/pages/CareContinuityPage'))
+const FacilitiesPage = React.lazy(() => import('../features/interop/pages/FacilitiesPage'))
+const ChwQueuePage = React.lazy(() => import('../features/interop/pages/ChwQueuePage'))
+
 // Content list pages - one lazy component per entity type, wired to its
 // dedicated page. Previously a single ContentListPageWrapper (hardcoded to
 // QuestionsListPage) was used for every content route, so diseases, symptoms,
@@ -353,6 +362,13 @@ export default function Router() {
 
           {/* Phase 6 — Population Health & SDG Analytics */}
           <Route path="analytics" element={<AnalyticsDashboardPage />} />
+
+          {/* Phase 10 — Interoperability, Health-System Integration & Outcome Feedback */}
+          <Route path="interop" element={<InteroperabilityDashboardPage />} />
+          <Route path="interop/sdg" element={<SdgDashboardPage />} />
+          <Route path="interop/care-continuity" element={<CareContinuityPage />} />
+          <Route path="interop/facilities" element={<FacilitiesPage />} />
+          <Route path="interop/chw-queue" element={<ChwQueuePage />} />
         </Route>
 
         {/* ============================================================ */}

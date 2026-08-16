@@ -11,7 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import AuthenticationError, AuthorizationError
 from app.core.logging import get_logger
 from app.core.security.firebase import verify_firebase_token
-from app.core.security.rbac import Role, has_role
+from app.core.security.rbac import (
+    Permission,
+    Role,
+    check_permission,
+    get_role_permissions,
+    has_role,
+)
 from app.domain.entities.user import User
 from app.infrastructure.database import get_db as _get_db
 from app.infrastructure.persistence.repositories.sql_user_repository import (
@@ -204,4 +210,66 @@ async def get_chw_user(
         # are denied. Use has_role so the hierarchy admits senior staff.
         if not has_role(current_user.roles, Role.MEDICAL_DIRECTOR):
             raise AuthorizationError(detail="Community Health Worker access required")
+    return current_user
+
+
+async def get_interop_user(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> User:
+    """Interoperability admin access (Phase 10).
+
+    Requires the INTEROP_MANAGE permission (facility/interop config management).
+    Granted to MEDICAL_DIRECTOR and SUPER_ADMIN. Patient/CHW/research roles
+    are denied — they may consume interoperability outputs but not manage
+    facility metadata.
+    """
+
+    if not current_user.roles:
+        raise AuthorizationError(detail="Interoperability admin access required")
+    all_perms: set[Permission] = set()
+    for r in current_user.roles:
+        try:
+            all_perms |= get_role_permissions(Role(r))
+        except ValueError:
+            continue
+    if not check_permission(all_perms, Permission.INTEROP_MANAGE):
+        raise AuthorizationError(detail="Interoperability admin access required")
+    return current_user
+
+
+async def get_referral_user(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> User:
+    """Referral management access (Phase 10).
+
+    Admits patients (own referrals), CHWs (assigned-patient referrals),
+    and clinicians/admins (REFERRAL_MANAGE). Per-operation ownership/assignment
+    is still enforced at the service layer (IDOR protection). This dependency
+    only confirms the caller has SOME referral access.
+    """
+    if not current_user.roles:
+        raise AuthorizationError(detail="Referral access required")
+    return current_user
+
+
+async def get_sdg_export_user(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> User:
+    """SDG / population export access (Phase 10).
+
+    Requires SDG_EXPORT permission (de-identified aggregate exports only).
+    Granted to RESEARCH_REVIEWER, MEDICAL_DIRECTOR, SUPER_ADMIN. Never grants
+    patient-level data access.
+    """
+
+    if not current_user.roles:
+        raise AuthorizationError(detail="SDG export access required")
+    all_perms: set[Permission] = set()
+    for r in current_user.roles:
+        try:
+            all_perms |= get_role_permissions(Role(r))
+        except ValueError:
+            continue
+    if not check_permission(all_perms, Permission.SDG_EXPORT):
+        raise AuthorizationError(detail="SDG export access required")
     return current_user

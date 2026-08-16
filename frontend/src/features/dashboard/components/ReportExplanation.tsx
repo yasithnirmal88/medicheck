@@ -109,7 +109,7 @@ const ReportExplanation: React.FC<ReportExplanationProps> = ({ sessionId }) => {
             aria-hidden
           />
           <span>
-            We couldn't generate the explanation right now. Your clinical
+            We couldn&apos;t generate the explanation right now. Your clinical
             assessment is still available below.
           </span>
         </div>
@@ -138,7 +138,7 @@ const ReportExplanation: React.FC<ReportExplanationProps> = ({ sessionId }) => {
             aria-hidden
           />
           <span>
-            We couldn't generate the explanation right now. Your clinical
+            We couldn&apos;t generate the explanation right now. Your clinical
             assessment is still available below.
           </span>
         </div>
