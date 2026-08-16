@@ -213,6 +213,25 @@ class Settings(BaseSettings):
     # Default health-literacy level for patient explanations.
     ai_default_literacy_level: str = "standard"
 
+    # ── Phase 10: Interoperability, Health-System Integration ─────────
+    # FHIR R4 version string included in every export manifest.
+    fhir_version: str = "4.0.1"
+    # Whether a granted ``fhir_export`` consent is REQUIRED before producing a
+    # patient FHIR bundle. When true, export is denied without consent.
+    fhir_consent_required: bool = True
+    # consent_type value used to gate FHIR/external sharing (ConsentRecordModel).
+    fhir_consent_type: str = "fhir_export"
+    # Default k-anonymity threshold reused by SDG/care-continuity exports
+    # (mirrors analytics_min_group_size; separate knob for explicitness).
+    sdg_export_min_group_size: int = 10
+    # Maximum number of referrals loaded into a CHW operational queue.
+    chw_queue_max_size: int = 100
+    # AI queue-ranking provider. "stub" = deterministic local ranking
+    # (operational factors only, never clinical urgency). No external API.
+    chw_queue_provider: str = "stub"
+    # Maximum FHIR bundle resource count per export (bounded query protection).
+    fhir_max_resources_per_export: int = 500
+
     @field_validator("celery_broker_url", mode="before")
     @classmethod
     def validate_celery_broker_url(cls, v: str | None, info: dict) -> str:

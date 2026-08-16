@@ -219,3 +219,29 @@ async def list_offline_devices(
         }
         for r in rows
     ]
+
+
+# ── Phase 10 — AI-assisted CHW operational queue ranking ──────────────
+
+
+@router.get(
+    "/queue",
+    summary="CHW operational follow-up queue (AI-assisted ranking)",
+    description=(
+        "Returns the CHW's referral follow-up tasks ranked by OPERATIONAL "
+        "factors (referral age, overdue, missing follow-up, appointment "
+        "window, unresolved admin status). AI does NOT rank by clinical "
+        "severity, urgency, probability, or risk. Clinical priority remains "
+        "deterministic. AI never modifies referral records."
+    ),
+)
+async def get_chw_queue(
+    chw_user: Annotated[User, Depends(get_chw_user)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+):
+    from app.application.services.chw_queue_service import ChwQueueService
+
+    svc = ChwQueueService(session)
+    result = await svc.get_queue(chw_user)
+    await session.commit()
+    return result

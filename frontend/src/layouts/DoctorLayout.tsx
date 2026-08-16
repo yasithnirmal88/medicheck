@@ -33,6 +33,11 @@ import {
   Shield,
   Stethoscope,
   Users,
+  Network as NetworkIcon,
+  Globe2,
+  Building2,
+  ClipboardList,
+  FileJson,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthContext } from '@/contexts/AuthContext'
@@ -93,6 +98,16 @@ const cmsNavGroups = [
       { label: 'Users & Roles', path: '/cms/users', icon: Users },
       { label: 'Search', path: '/cms/search', icon: Search },
       { label: 'Settings', path: '/cms/settings', icon: Settings },
+    ],
+  },
+  {
+    label: 'Interoperability',
+    items: [
+      { label: 'FHIR Export', path: '/cms/interop', icon: FileJson },
+      { label: 'SDG Analytics', path: '/cms/interop/sdg', icon: Globe2 },
+      { label: 'Care Continuity', path: '/cms/interop/care-continuity', icon: NetworkIcon },
+      { label: 'Facilities & Referrals', path: '/cms/interop/facilities', icon: Building2 },
+      { label: 'CHW Queue', path: '/cms/interop/chw-queue', icon: ClipboardList },
     ],
   },
 ]

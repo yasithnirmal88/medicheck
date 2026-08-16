@@ -97,6 +97,21 @@ class Permission(str, Enum):
     CHW_READ_ASSIGNED = "chw:read:assigned"
     CHW_RECORD_CONSENT = "chw:record:consent"
     CHW_SYNC_OFFLINE = "chw:sync:offline"
+    # Phase 10 — Interoperability, health-system integration & outcomes.
+    # FHIR export of a patient's OWN bundle (patient self-export, still
+    # consent-guarded). FHIR_EXPORT_ANY allows a clinician/admin to export a
+    # patient's bundle (IDOR-guarded + consent-guarded at the service layer).
+    FHIR_EXPORT_OWN = "fhir:export:own"
+    FHIR_EXPORT_ANY = "fhir:export:any"
+    # Manage interoperability config / facility metadata.
+    INTEROP_MANAGE = "interop:manage"
+    # Manage referrals for assigned patients (CHW) or any (clinician/admin).
+    # Patient gets REFERRAL_READ_OWN only.
+    REFERRAL_READ_OWN = "referral:read:own"
+    REFERRAL_MANAGE = "referral:manage"
+    # SDG / population export (research/public-health). Reuses the
+    # analytics gating philosophy: de-identified aggregates only.
+    SDG_EXPORT = "sdg:export"
 
 
 class Role(str, Enum):
@@ -213,6 +228,11 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.READ_ASSESSMENTS,
         Permission.CREATE_ASSESSMENTS,
         Permission.READ_HEALTH,
+        # Phase 10 — patient may export own FHIR bundle (consent-guarded) and
+        # read own referrals. Cannot manage referrals/facilities or export
+        # other patients' data.
+        Permission.FHIR_EXPORT_OWN,
+        Permission.REFERRAL_READ_OWN,
     },
     # Phase 8 — Community Health Worker. Least-privilege: may create
     # assessments for explicitly assigned patients, record consent, and sync
@@ -229,6 +249,10 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CHW_READ_ASSIGNED,
         Permission.CHW_RECORD_CONSENT,
         Permission.CHW_SYNC_OFFLINE,
+        # Phase 10 — CHW may manage referrals + record care outcomes for
+        # assigned patients (assignment verified per-operation). No FHIR_EXPORT_ANY,
+        # no INTEROP_MANAGE, no SDG_EXPORT.
+        Permission.REFERRAL_MANAGE,
     },
     Role.DOCTOR: {
         Permission.READ_USER,
@@ -237,6 +261,10 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CREATE_ASSESSMENTS,
         Permission.READ_ASSESSMENTS_ALL,
         Permission.READ_HEALTH,
+        # Phase 10 — clinicians may export patient FHIR bundles and manage
+        # referrals (IDOR + consent still enforced at the service layer).
+        Permission.FHIR_EXPORT_ANY,
+        Permission.REFERRAL_MANAGE,
     },
     Role.READ_ONLY_REVIEWER: {
         Permission.READ_USER,
@@ -274,6 +302,9 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CMS_WRITE_RECOMMENDATION,
         Permission.CMS_WRITE_LIFESTYLE,
         Permission.CMS_READ_VERSION_HISTORY,
+        # Phase 10
+        Permission.FHIR_EXPORT_ANY,
+        Permission.REFERRAL_MANAGE,
     } | _READ_ALL,
     Role.SPECIALIST_DOCTOR: {
         Permission.READ_USER,
@@ -295,6 +326,9 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CMS_WRITE_KNOWLEDGE_GRAPH,
         Permission.CMS_READ_VERSION_HISTORY,
         Permission.CMS_WRITE_PUBLISH,
+        # Phase 10
+        Permission.FHIR_EXPORT_ANY,
+        Permission.REFERRAL_MANAGE,
     } | _READ_ALL,
     Role.RESEARCH_REVIEWER: {
         Permission.READ_USER,
@@ -307,6 +341,9 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CMS_APPROVE_CONTENT,
         Permission.ANALYTICS_VIEW_POPULATION,
         Permission.AI_VIEW_GOVERNANCE,
+        # Phase 10 — research reviewers may export de-identified SDG aggregates.
+        # No patient-level FHIR_EXPORT_ANY, no INTEROP_MANAGE.
+        Permission.SDG_EXPORT,
     } | _READ_ALL,
     Role.MEDICAL_DIRECTOR: {
         Permission.READ_USER,
@@ -322,6 +359,11 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CMS_WRITE_PUBLISH,
         Permission.ANALYTICS_VIEW_POPULATION,
         Permission.AI_VIEW_GOVERNANCE,
+        # Phase 10 — full interoperability authority.
+        Permission.FHIR_EXPORT_ANY,
+        Permission.INTEROP_MANAGE,
+        Permission.REFERRAL_MANAGE,
+        Permission.SDG_EXPORT,
     } | _READ_ALL | _WRITE_ALL,
     Role.SUPER_ADMIN: {
         Permission.READ_USER,
@@ -340,6 +382,11 @@ _ROLE_PERMISSIONS_MAP: dict[Role, set[Permission]] = {
         Permission.CMS_WRITE_PUBLISH,
         Permission.ANALYTICS_VIEW_POPULATION,
         Permission.AI_VIEW_GOVERNANCE,
+        # Phase 10 — full interoperability authority.
+        Permission.FHIR_EXPORT_ANY,
+        Permission.INTEROP_MANAGE,
+        Permission.REFERRAL_MANAGE,
+        Permission.SDG_EXPORT,
     } | _READ_ALL | _WRITE_ALL,
 }
 

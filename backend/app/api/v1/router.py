@@ -19,11 +19,14 @@ from app.api.v1.endpoints.assessments import router as assessments_router
 from app.api.v1.endpoints.auth import router as auth_router
 from app.api.v1.endpoints.cdse import router as cdse_router
 from app.api.v1.endpoints.chw import router as chw_router
+from app.api.v1.endpoints.facilities import router as facilities_router
 from app.api.v1.endpoints.graph import router as graph_router
 from app.api.v1.endpoints.health import router as health_router
+from app.api.v1.endpoints.interoperability import router as interoperability_router
 from app.api.v1.endpoints.profile import router as profile_router
 from app.api.v1.endpoints.questionnaires import router as questionnaires_router
 from app.api.v1.endpoints.questions import router as questions_router
+from app.api.v1.endpoints.referrals import router as referrals_router
 from app.api.v1.endpoints.report import router as report_router
 from app.api.v1.endpoints.trajectory import router as trajectory_router
 from app.api.v1.endpoints.users import router as users_router
@@ -55,3 +58,7 @@ router.include_router(cms_publishing_router)
 router.include_router(cms_evidence_router)
 router.include_router(cms_audit_router)
 router.include_router(cms_dashboard_router)
+# Phase 10 — interoperability, referrals, facilities (CHW queue is on chw_router).
+router.include_router(interoperability_router)
+router.include_router(referrals_router)
+router.include_router(facilities_router)

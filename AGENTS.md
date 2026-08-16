@@ -508,3 +508,95 @@ source of truth; AI explains observed changes only (never decides them).
 - Frontend: `features/analytics/` module. Route `/cms/analytics` under DoctorLayout. Nav item "Population Analytics" (BarChart3 icon).
 - Test commands: backend `python -m pytest tests/test_population_analytics_phase6.py -q` -> 22 pass. Frontend `CI=true npx vitest run src/features/analytics` -> 7 pass.
 - Constraints honored: NO clinical decision engine changes, NO schema migrations, NO LLM APIs. AI is explanation/extraction layer only.
+
+## Phase 10 — Interoperability, Health-System Integration & Outcome Feedback (COMPLETE)
+**Invariant (NEVER violate):** The CDSE decides. AI explains/extracts/translates/
+summarizes/assists operationally ONLY. Phase 10 adds NO second clinical calculation
+engine. FHIR/SDG/trajectory outputs are generated READ-ONLY from existing
+deterministic data. Outcome data NEVER feeds back into CDSE scoring/severity/
+probability/recommendations. Full report: `MEDICHECK_PHASE10_REPORT.md`; baseline:
+`MEDICHECK_PHASE10_BASELINE.md`; FHIR mappings: `MEDICHECK_FHIR_MAPPING.md`; SDG
+mappings: `MEDICHECK_SDG_INDICATOR_MAPPING.md`.
+
+### Backend (additive)
+- **New models** (`app/infrastructure/persistence/models/`): `facility.py`
+  (FacilityModel + FacilityServiceModel), `referral.py` EXTENDED (additive cols
+  facility_id, receiving_status, scheduled_for, completed_at — NO existing col
+  altered), `referral_status_event.py` (append-only transition audit),
+  `referral_access_barrier.py` (Phase 9 reuse), `care_outcome.py`
+  (CareOutcomeModel — operational funnel states), `interoperability_export.py`
+  (export audit metadata — NO PHI payloads).
+- **Migration** `alembic/versions/20260811_interop_phase10.py` — additive,
+  idempotent. Creates facilities, facility_services, care_outcomes,
+  interoperability_exports + referral additive columns. No clinical table altered.
+- **New services** (`app/application/services/`): `fhir_export_service.py`
+  (FhirExportService — FHIR R4 Bundle gen, IDOR+consent-guarded, batched no N+1,
+  records InteroperabilityExportModel audit row; AI interpretations NEVER clinical
+  Observations; possible condition NEVER confirmed diagnosis),
+  `sdg_export_service.py` (composes Phase 6 analytics + Phase 10 care-continuity
+  into SDG-aligned rows, k-suppressed per metric/stage, JSON+CSV; ALL metrics are
+  "medicheck-aligned-proxy" — none claimed official UN), `care_continuity_service.py`
+  (funnel + metrics, SQL aggregation, de-identified, k-suppressed),
+  `facility_service.py` (facility CRUD, admin-gated), `referral_service.py`
+  EXTENDED (lifecycle transitions deterministic+auditable via
+  ReferralStatusEventModel, facility feedback, outcome recording, task completion),
+  `chw_queue_service.py` (AI-assisted operational queue ranking — operational
+  factors ONLY: referral age/overdue/missing-follow-up/geographic/appointment
+  window; NEVER severity/probability/urgency/mortality; AIInteractionAuditModel
+  governance record).
+- **Referral status enum** (`referral_dtos.py` ReferralStatus): pending,
+  acknowledged, scheduled, attended, completed, declined, unable_to_access,
+  cancelled, + Phase 10 facility handoff: sent, received, accepted, + terminal
+  operational: expired, lost_to_followup. Receiving-side/authorized CHW provides
+  status explicitly (NEVER inferred from timestamp). Every transition audited.
+- **New/extended endpoints**: `interoperability.py` (prefix /interoperability:
+  GET fhir/patient/{id}, GET fhir/session/{id}, GET exports, GET sdg, GET sdg/csv,
+  GET care-continuity), `facilities.py` (prefix /facilities: list/get/create),
+  `referrals.py` EXTENDED (lifecycle + PATCH /{id}/feedback + outcomes +
+  barriers + tasks), `chw.py` EXTENDED (GET /chw/queue). All registered in
+  `app/api/v1/router.py`.
+- **RBAC**: added Permission.FHIR_EXPORT_OWN, FHIR_EXPORT_ANY, SDG_EXPORT,
+  INTEROP_MANAGE, FACILITY_MANAGE. Deps: get_interop_user, get_sdg_export_user,
+  get_referral_user (all depend on get_current_active_user -> get_current_user).
+  Patients denied admin/research endpoints. IDOR: patient = own data only;
+  FHIR_EXPORT_ANY = any patient (audited). Consent-gated: absent consent -> 403.
+- **k-anonymity**: k=10 (settings.analytics_min_group_size). Per-metric +
+  per-funnel-stage suppression; suppressed -> value/numerator/denominator null,
+  suppression_status="suppressed". Cannot bypass via filters/narrow ranges/
+  individual dims/endpoint combination. No user_id/email/session_id in ANY
+  SDG/care-continuity response.
+
+### Frontend (additive)
+- New `features/interop/` module: api/interopService.ts (typed client),
+  hooks/useInteropQueries.ts (TanStack), components/InteropUI.tsx (PrivacyBadge,
+  SuppressedBadge, TransparencyNotice, MetricCard, error/loading/empty states),
+  pages: InteroperabilityDashboardPage (FHIR export + history),
+  SdgDashboardPage (indicators + privacy badges + CSV download),
+  CareContinuityPage (funnel + metrics), FacilitiesPage (registry + referral
+  status + feedback), ChwQueuePage (AI operational queue).
+- Routes under `/cms/interop/*` (DoctorLayout, doctor/admin gated). Nav section
+  "Interoperability" added to DoctorLayout.tsx. Patients do NOT see admin/research.
+- **React Query v5 gotcha:** use `isLoading` (not `isPending`) for the FHIR
+  export button disabled state — `isPending` is true even when a query is
+  `enabled:false` (no data yet); `isLoading` == isPending && isFetching so it is
+  false for disabled queries. Test matchers for interpolated text (e.g.
+  "{total} export(s)", "Provider: {provider}") must use function matchers or
+  getAllByText because the value is a separate text node.
+
+### Test commands (verified)
+- Backend Phase 10: `cd backend && ALLOW_MOCK_AUTH=true DATABASE_URL=sqlite+aiosqlite:///./test.db ENVIRONMENT=development python -m pytest tests/test_interoperability_phase10.py -q -W error::DeprecationWarning` -> 50 pass.
+- Frontend: `cd frontend && npm run typecheck && CI=true npx vitest run src/features/interop` -> 16 pass; full suite 100 pass, typecheck clean, build OK.
+- Regression (run in batches — full suite times out at 300s): auth/RBAC/profile/emergency, CHW Phase 8, population Phase 6, AI Phase 7, AI RAG Phase 2, longitudinal Phase 4, intake Phase 5, AI intake Phase 3, CMS recovery, report service — ALL pass.
+
+### Phase 10 safety invariants (do NOT regress)
+- No Phase 10 feature can alter a previously generated deterministic clinical result.
+- FHIR export is read-only, consent-gated, IDOR-guarded, audited. AI interpretations
+  are NEVER clinical Observations. Possible conditions are NEVER confirmed diagnoses.
+- SDG/care-continuity outputs are de-identified + k-anonymity-suppressed; no
+  patient identifiers; suppression unbypassable.
+- Outcome data NEVER modifies CDSE score/severity/probability/recommendations.
+- AI CHW queue ranking uses operational factors ONLY (never clinical urgency).
+- Referral status transitions are deterministic + auditable; status provided
+  explicitly, never inferred from timestamps.
+- No real hospital/government integrations built (standards-compatible interfaces
+  + documented integration points; mock/demo adapters where real systems absent).
