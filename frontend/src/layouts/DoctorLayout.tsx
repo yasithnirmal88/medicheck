@@ -38,6 +38,8 @@ import {
   Building2,
   ClipboardList,
   FileJson,
+  Sparkles,
+  Scale,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthContext } from '@/contexts/AuthContext'
@@ -108,6 +110,14 @@ const cmsNavGroups = [
       { label: 'Care Continuity', path: '/cms/interop/care-continuity', icon: NetworkIcon },
       { label: 'Facilities & Referrals', path: '/cms/interop/facilities', icon: Building2 },
       { label: 'CHW Queue', path: '/cms/interop/chw-queue', icon: ClipboardList },
+    ],
+  },
+  {
+    label: 'AI Governance',
+    items: [
+      { label: 'CHW Suggestions', path: '/cms/ai-governance/chw-suggestions', icon: Sparkles },
+      { label: 'Equity Intelligence', path: '/cms/ai-governance/equity', icon: Scale },
+      { label: 'SDG Narratives', path: '/cms/ai-governance/sdg-narratives', icon: Globe2 },
     ],
   },
 ]
