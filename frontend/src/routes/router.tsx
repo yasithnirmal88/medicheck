@@ -64,6 +64,16 @@ const SdgDashboardPage = React.lazy(() => import('../features/interop/pages/SdgD
 const CareContinuityPage = React.lazy(() => import('../features/interop/pages/CareContinuityPage'))
 const FacilitiesPage = React.lazy(() => import('../features/interop/pages/FacilitiesPage'))
 const ChwQueuePage = React.lazy(() => import('../features/interop/pages/ChwQueuePage'))
+// Phase 11 — Governed AI Care Coordination & Equity Intelligence
+const ChwSuggestionsPage = React.lazy(
+  () => import('../features/ai-governance/pages/ChwSuggestionsPage')
+)
+const EquityIntelligencePage = React.lazy(
+  () => import('../features/ai-governance/pages/EquityIntelligencePage')
+)
+const SdgNarrativesPage = React.lazy(
+  () => import('../features/ai-governance/pages/SdgNarrativesPage')
+)
 
 // Content list pages - one lazy component per entity type, wired to its
 // dedicated page. Previously a single ContentListPageWrapper (hardcoded to
@@ -369,6 +379,11 @@ export default function Router() {
           <Route path="interop/care-continuity" element={<CareContinuityPage />} />
           <Route path="interop/facilities" element={<FacilitiesPage />} />
           <Route path="interop/chw-queue" element={<ChwQueuePage />} />
+
+          {/* Phase 11 — Governed AI Care Coordination & Equity Intelligence */}
+          <Route path="ai-governance/chw-suggestions" element={<ChwSuggestionsPage />} />
+          <Route path="ai-governance/equity" element={<EquityIntelligencePage />} />
+          <Route path="ai-governance/sdg-narratives" element={<SdgNarrativesPage />} />
         </Route>
 
         {/* ============================================================ */}
