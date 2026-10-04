@@ -168,6 +168,21 @@ class Settings(BaseSettings):
     ai_provider: str = "stub"
     ai_model: str = ""
     ai_api_key: str = ""
+    # Base URL for OpenAI-compatible chat APIs (e.g. https://api.openai.com/v1).
+    # Empty means "use the OpenAI default". Any OpenAI-compatible endpoint that
+    # accepts Bearer auth + POST /chat/completions works (Azure native endpoint
+    # shape is NOT supported — use an OpenAI-compatible gateway instead).
+    ai_base_url: str = ""
+    # Retries after the first attempt for transient vendor failures (HTTP
+    # 429/5xx, network errors). Auth errors (other 4xx) never retry.
+    ai_max_retries: int = 1
+    # ── AI vendor spend / abuse guardrails ──────────────────────────
+    # Per-user + global request budgets for METERED (real-vendor) AI calls.
+    # Stubs bypass budgets entirely (no vendor cost). 0 disables a tier.
+    # Hourly/daily windows are UTC calendar windows.
+    ai_budget_user_hourly_requests: int = 30
+    ai_budget_user_daily_requests: int = 200
+    ai_budget_global_daily_requests: int = 20000
     # Hard timeout (seconds) for an AI explanation request. A timeout is
     # treated as an AI failure, never a clinical-report failure.
     ai_request_timeout_seconds: float = 20.0
@@ -190,6 +205,11 @@ class Settings(BaseSettings):
     # Speech-to-text provider. Default stub works without external credentials.
     stt_provider: str = "stub"
     stt_model: str = ""
+    # API key for the STT vendor. Required for any non-stub STT provider.
+    stt_api_key: str = ""
+    # Base URL for OpenAI-compatible transcription APIs
+    # (POST /audio/transcriptions). Empty means "use the OpenAI default".
+    stt_base_url: str = ""
     # Hard timeout (seconds) for a speech-to-text request. A timeout is treated
     # as a voice failure, never an assessment failure (patient can type instead).
     stt_request_timeout_seconds: float = 20.0
