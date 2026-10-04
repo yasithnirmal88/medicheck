@@ -24,6 +24,14 @@ class Settings(BaseSettings):
 
     environment: Environment = Environment.DEVELOPMENT
     log_level: str = "DEBUG"
+    # Log format: "text" (default, human-readable) or "json" (log aggregation).
+    log_format: str = "text"
+    # API docs (/docs, /redoc, /openapi.json). None = auto: enabled unless
+    # production. Explicit True/False always wins.
+    docs_enabled: bool | None = None
+    # Sentry error tracking. Empty = disabled. When set, sentry_sdk must be
+    # installed (optional dependency); otherwise startup logs a warning.
+    sentry_dsn: str = ""
     secret_key: str = ""  # MUST be set via .env in production
     project_name: str = "MediCheck"
     version: str = "0.1.0"
@@ -271,6 +279,14 @@ class Settings(BaseSettings):
         host = values.get("redis_host", "localhost")
         port = values.get("redis_port", 6379)
         return f"redis://{host}:{port}/1"
+
+    @property
+    def docs_enabled_resolved(self) -> bool:
+        """Whether API docs are served. Explicit setting always wins;
+        otherwise docs are on except in production."""
+        if self.docs_enabled is not None:
+            return self.docs_enabled
+        return self.environment != Environment.PRODUCTION
 
     @property
     def is_development(self) -> bool:
